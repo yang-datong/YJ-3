@@ -2,7 +2,7 @@
 const idx = 0;
 let width; let mheight; let mwidth;
 let size;
-// -------------------------mian-------------------------------
+// -------------------------main-------------------------------
 // libByteVC1_dec_so("libByteVC1_dec.so")
 libttheif_dec_so('libttheif_dec.so');
 

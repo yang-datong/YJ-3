@@ -13,6 +13,7 @@ let TRACE_TAG;
 let REGISTER_TAG;
 let INIT_SEGMENT_ADDRESS_TAG;
 let TELE_SHOW_ROW_NUMBER;
+
 rpc.exports.init = mjson => {
 	END_LINE_LEN = mjson.end_line_len;
 	VIEW_MESSAGE = mjson.view_message;
@@ -139,6 +140,11 @@ function show_telescope_view(...args) {
 }
 
 // 寄存器视图
+const maxSkipCount = 3;
+let skipCount = maxSkipCount;
+let skipCache = '';
+const REGISTER_FAZY_ZERO_VALUE_FILTERING_MODE = false;
+
 function show_registers(...args) {
 	const context = args[0];
 	let data = '';
@@ -151,7 +157,26 @@ function show_registers(...args) {
 			ptr = 0;
 		}
 
-		data += (key + '│' + addr + '│' + ptr + REGISTER_TAG);
+		if (REGISTER_FAZY_ZERO_VALUE_FILTERING_MODE) {
+			if (addr <= 0) {
+				skipCache += (key + '│' + addr + '│' + ptr + REGISTER_TAG);
+				skipCount--;
+				if (skipCount == 0) {
+					skipCount = maxSkipCount;
+					skipCache = '';
+				}
+			} else {
+				if (skipCount = maxSkipCount - 1) {
+					data += skipCache;
+					skipCache = '';
+					skipCount = maxSkipCount;
+				}
+
+				data += (key + '│' + addr + '│' + ptr + REGISTER_TAG);
+			}
+		} else if (addr > 0) {
+			data += (key + '│' + addr + '│' + ptr + REGISTER_TAG);
+		}
 	}
 
 	send([data, VIEW_REGISTERS]);

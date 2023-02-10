@@ -68,6 +68,10 @@ class LayoutView:
         split = self.payload.split(LayoutView.tele_tag)
         for i in range(len(split)-1):
             data = split[i].split("│")
+            try:
+                data[2] = str(int(data[2],16))
+            except Exception as e:
+                data[2] = "0"
             if(int(data[2],16) == 0): #值为0 显示灰色
                 update_show_text_view_style(data,LayoutView.color_format_value_grey,LayoutView.tele_tag)
             elif(self.stack_base != 0 and hex(int(data[2],16) >>16<<16) == self.stack_base):
@@ -82,6 +86,10 @@ class LayoutView:
         split = self.payload.split(LayoutView.register_tag)
         for i in range(len(split)-1):
             data = split[i].split("│")
+            try:
+                data[1] = str(int(data[1],16))
+            except Exception as e:
+                data[1] = "0"
             if(int(data[1],16) == 0):
                 update_show_text_view_style(data,LayoutView.color_format_value_grey,LayoutView.register_tag)
             elif(self.stack_base != 0 and hex(int(data[1],16) >>16<<16) == self.stack_base):
