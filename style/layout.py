@@ -10,7 +10,7 @@ class LayoutView:
         self.stack_base = 0
         self.code_base = 0
         self.step = 4
-        
+
     #显示一条分割线
     def show_line_view(self):
         print("─"*int(self.width - LayoutView.end_line_len - int(len(LayoutView.message_tag))) + "\033[36m"+LayoutView.message_tag+"\033[0m"+"─"*LayoutView.end_line_len+"\n")
@@ -22,7 +22,7 @@ class LayoutView:
             show_head_view_tips_info_color()
             return True
         else:
-            return False 
+            return False
 
     #检查是否需要改变分割线的标签
     def check_is_view_tag(self,message):
@@ -36,12 +36,12 @@ class LayoutView:
             self.payload = message['payload']
         else:
             self.payload = message['payload']
-        self.update_is_view_tag() 
+        self.update_is_view_tag()
 
     #改变分割线的标签
     def update_is_view_tag(self):
         if LayoutView.view_registers in self.payload:
-            LayoutView.message_tag = LayoutView.view_registers 
+            LayoutView.message_tag = LayoutView.view_registers
         elif LayoutView.view_stack in self.payload:
             LayoutView.message_tag = LayoutView.view_stack
         elif LayoutView.view_code in self.payload:
@@ -50,7 +50,7 @@ class LayoutView:
             LayoutView.message_tag = LayoutView.view_trace
         else:
             LayoutView.message_tag = " send "
-        
+
     #重置数据索引
     def reset_send_payload(self,message):
         mtype = type(message['payload'])
@@ -70,9 +70,9 @@ class LayoutView:
             data = split[i].split("│")
             if(int(data[2],16) == 0): #值为0 显示灰色
                 update_show_text_view_style(data,LayoutView.color_format_value_grey,LayoutView.tele_tag)
-            elif(self.stack_base != 0 and hex(int(data[2],16) >>16<<16) == self.stack_base): 
+            elif(self.stack_base != 0 and hex(int(data[2],16) >>16<<16) == self.stack_base):
                 update_show_text_view_style(data,LayoutView.color_format_value_pink,LayoutView.tele_tag)
-            elif(self.code_base != 0 and hex(int(data[2],16) >>16<<16) == self.code_base): 
+            elif(self.code_base != 0 and hex(int(data[2],16) >>16<<16) == self.code_base):
                 update_show_text_view_style(data,LayoutView.color_format_value_red,LayoutView.tele_tag)
             else:
                 update_show_text_view_style(data,LayoutView.color_format_value_bule,LayoutView.tele_tag)
@@ -82,11 +82,11 @@ class LayoutView:
         split = self.payload.split(LayoutView.register_tag)
         for i in range(len(split)-1):
             data = split[i].split("│")
-            if(int(data[1],16) == 0): 
+            if(int(data[1],16) == 0):
                 update_show_text_view_style(data,LayoutView.color_format_value_grey,LayoutView.register_tag)
-            elif(self.stack_base != 0 and hex(int(data[1],16) >>16<<16) == self.stack_base): 
+            elif(self.stack_base != 0 and hex(int(data[1],16) >>16<<16) == self.stack_base):
                 update_show_text_view_style(data,LayoutView.color_format_value_pink,LayoutView.register_tag)
-            elif(self.code_base != 0 and hex(int(data[1],16) >>16<<16) == self.code_base): 
+            elif(self.code_base != 0 and hex(int(data[1],16) >>16<<16) == self.code_base):
                 update_show_text_view_style(data,LayoutView.color_format_value_red,LayoutView.register_tag)
             else:
                 update_show_text_view_style(data,LayoutView.color_format_value_bule,LayoutView.register_tag)
@@ -109,7 +109,7 @@ class LayoutView:
                 print(" → \033[32m0x{0}\033[0m".format(data))
             else:
                 print("   \033[37m0x{0}\033[0m".format(data))
-        
+
     #检查是只是初始化值
     def check_is_init_segment_address(self):
         if LayoutView.init_segment_address_tag in self.payload:
@@ -121,7 +121,7 @@ class LayoutView:
             self.code_base = hex(int(code,16) >> 16 << 16)
             return True
         else:
-            return False 
+            return False
 
 
 
@@ -160,7 +160,7 @@ def get_config_info():
     |__/|__/___/\___/\____/_/|_/_/  /_/___/     /_/\___/
     """
     LayoutView.banner = """
-    ¦   ¦   ¦   ¦   ¦   ¦   ¦__..--.._
+¦   ¦   ¦   ¦   ¦   ¦   ¦__..--.._
     ¦ .....              .--~  .....  `.
     .":    "`-..  .    .' ..-'"    :". `
     ` `._ ` _.'`"(     `-"'`._ ' _.' '
@@ -169,7 +169,7 @@ def get_config_info():
     ¦   ¦   ¦   ¦/
     ¦   ¦   ¦   (
     ¦   ¦   ¦   ¦^---'
- """
+    """
     print("\033[31m{0}\033[0m".format(LayoutView.banner))
 
 #获取目标源文件，进行反汇编代码获取

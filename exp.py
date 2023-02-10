@@ -4,21 +4,23 @@ from style.layout import *
 import frida,sys
 
 
-mainFile = "./frida_so.js"
-if (len(sys.argv) > 1):
-    mainFile = sys.argv[1]
+if (len(sys.argv) < 2):
+    print("\033[31mPlease input script\033[0m, such as ->\033[32m python3 exp.py script.js\033[0m")
+    exit(0)
+
+mainFile = sys.argv[1]
 
 layout = LayoutView() #Init Sytle Theme
 
 def on_message(message,data):
     if message['type'] == 'send':
-        layout.check_is_view_tag(message) 
+        layout.check_is_view_tag(message)
         if(layout.check_is_need_clear_view()==True):
             return
         if(layout.check_is_init_segment_address() == True):
             return
         layout.show_line_view()
-        layout.reset_send_payload(message) 
+        layout.reset_send_payload(message)
         if LayoutView.tele_tag in layout.payload:
             layout.show_tele_view()
         elif LayoutView.register_tag in layout.payload:
@@ -36,7 +38,7 @@ def on_message(message,data):
 
 
 device = frida.get_usb_device()
-process = device.attach('抖音') 
+process = device.attach('抖音')
 process.enable_debugger()
 #pid = device.spawn("com.android.providers.downloads.ui", activity="com.android.providers.downloads.ui.DownloadList") #使用挂起调试时才用
 
