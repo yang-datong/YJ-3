@@ -1,0 +1,27 @@
+{
+   "end_line_len": 4,
+   "tele_show_row_number": 10,
+   "code_show_row_number": "5",
+
+   "view_message": " send ",
+   "view_stack": " stack ",
+   "view_code": " code ",
+   "view_trace": " trace ",
+   "view_registers": " registers ",
+
+   "clear_tag": "$$$$clear_tag$$$$",
+   "message_tag": "$$$$message_tag$$$$",
+   "tele_tag": "$$$$tele_tag$$$$",
+   "code_tag": "$$$$code$$$$",
+   "trace_tag": "$$$$trace$$$$",
+   "register_tag": "$$$$register_tag$$$$",
+   "init_segment_address_tag": "$$$$INIT_SEGMENT$$$$",
+
+   "color_format_value_grey": "0",
+   "color_format_value_red": "31",
+   "color_format_value_green": "32",
+   "color_format_value_yellow": "33",
+   "color_format_value_bule": "34",
+   "color_format_value_pink": "35",
+   "color_format_value_cyan": "36"
+}
