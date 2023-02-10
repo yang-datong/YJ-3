@@ -144,9 +144,11 @@ const maxSkipCount = 3;
 let skipCount = maxSkipCount;
 let skipCache = '';
 const REGISTER_FAZY_ZERO_VALUE_FILTERING_MODE = false;
+const REGISTER_CHECK_IS_LR_MODE = true;
 
 function show_registers(...args) {
 	const context = args[0];
+	var IS_CHECKED_LR = false
 	let data = '';
 	let addr; let ptr;
 	for (const key in context) {
@@ -174,6 +176,14 @@ function show_registers(...args) {
 
 				data += (key + '│' + addr + '│' + ptr + REGISTER_TAG);
 			}
+		} else if (REGISTER_CHECK_IS_LR_MODE) {
+			if (key == "lr") {
+				IS_CHECKED_LR = true
+			}
+			if (IS_CHECKED_LR) {
+				data += (key + '│' + addr + '│' + ptr + REGISTER_TAG);
+			}
+
 		} else if (addr > 0) {
 			data += (key + '│' + addr + '│' + ptr + REGISTER_TAG);
 		}

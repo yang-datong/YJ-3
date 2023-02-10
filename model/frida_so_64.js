@@ -1,6 +1,7 @@
 // -------------------------mian-------------------------------
 // java()
-hook('libttmplayer.so', 0x10_34_18);
+//hook('libttmplayer.so', 0x103418);
+hook('libttmplayer.so',0xF68f0)
 // Hook("libjato.so",0x12B05)
 // hooks("libttmplayer.so",0x145384)
 // -------------------------func-------------------------------
@@ -15,19 +16,18 @@ function java() {
 }
 
 function hook(so, addr) {
-	   let lib = Module.findBaseAddress(so);
+	let lib = Module.findBaseAddress(so);
 	while (lib == null) {
 		lib = Module.findBaseAddress(so);
 	}
 
 	b(lib.add(addr), c => {
 		ls(c);
-		tele(c.x8);
 	});
 }
 
 function hooks(so, addr) {
-	   let lib = Module.findBaseAddress(so);
+	let lib = Module.findBaseAddress(so);
 	while (lib == null) {
 		lib = Module.findBaseAddress(so);
 	}
@@ -38,24 +38,3 @@ function hooks(so, addr) {
 			send('1111');
 		}, onLeave(returnValue) {}});
 }
-
-let exitClass = '';
-setImmediate(() => {
-	Java.perform(() => {
-		console.log('[*] Hooking calls to System.exit');
-		exitClass = Java.use('java.lang.System');
-		exitClass.exit.implementation = function () {
-			console.log('[*] System.exit called');
-		};
-
-		let strncmp;
-		const imports = Module.enumerateImportsSync('libfoo.so');
-
-		for (const import_ of imports) {
-			if (import_.name == 'strncmp') {
-				strncmp = import_.address;
-				break;
-			}
-		}
-	});
-});

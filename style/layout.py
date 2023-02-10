@@ -68,36 +68,28 @@ class LayoutView:
         split = self.payload.split(LayoutView.tele_tag)
         for i in range(len(split)-1):
             data = split[i].split("│")
-            try:
-                data[2] = str(int(data[2],16))
-            except Exception as e:
-                data[2] = "0"
             if(int(data[2],16) == 0): #值为0 显示灰色
-                update_show_text_view_style(data,LayoutView.color_format_value_grey,LayoutView.tele_tag)
+                update_show_text_view_style(data,LayoutView.color_format_value_grey,LayoutView.tele_tag,self.step)
             elif(self.stack_base != 0 and hex(int(data[2],16) >>16<<16) == self.stack_base):
-                update_show_text_view_style(data,LayoutView.color_format_value_pink,LayoutView.tele_tag)
+                update_show_text_view_style(data,LayoutView.color_format_value_pink,LayoutView.tele_tag,self.step)
             elif(self.code_base != 0 and hex(int(data[2],16) >>16<<16) == self.code_base):
-                update_show_text_view_style(data,LayoutView.color_format_value_red,LayoutView.tele_tag)
+                update_show_text_view_style(data,LayoutView.color_format_value_red,LayoutView.tele_tag,self.step)
             else:
-                update_show_text_view_style(data,LayoutView.color_format_value_bule,LayoutView.tele_tag)
+                update_show_text_view_style(data,LayoutView.color_format_value_bule,LayoutView.tele_tag,self.step)
 
     #格式化显示registers内存信息
     def show_registers_view(self):
         split = self.payload.split(LayoutView.register_tag)
         for i in range(len(split)-1):
             data = split[i].split("│")
-            try:
-                data[1] = str(int(data[1],16))
-            except Exception as e:
-                data[1] = "0"
             if(int(data[1],16) == 0):
-                update_show_text_view_style(data,LayoutView.color_format_value_grey,LayoutView.register_tag)
+                update_show_text_view_style(data,LayoutView.color_format_value_grey,LayoutView.register_tag,self.step)
             elif(self.stack_base != 0 and hex(int(data[1],16) >>16<<16) == self.stack_base):
-                update_show_text_view_style(data,LayoutView.color_format_value_pink,LayoutView.register_tag)
+                update_show_text_view_style(data,LayoutView.color_format_value_pink,LayoutView.register_tag,self.step)
             elif(self.code_base != 0 and hex(int(data[1],16) >>16<<16) == self.code_base):
-                update_show_text_view_style(data,LayoutView.color_format_value_red,LayoutView.register_tag)
+                update_show_text_view_style(data,LayoutView.color_format_value_red,LayoutView.register_tag,self.step)
             else:
-                update_show_text_view_style(data,LayoutView.color_format_value_bule,LayoutView.register_tag)
+                update_show_text_view_style(data,LayoutView.color_format_value_bule,LayoutView.register_tag,self.step)
 
     def show_trace_view(self):
         split = self.payload.split(LayoutView.trace_tag)
@@ -191,16 +183,28 @@ def show_head_view_tips_info_color():
     print("[ Legend: \033[31m{0}\033[0m | \033[31m{1}\033[0m | \033[32m{2}\033[0m | \033[35m{3}\033[0m | \033[33m{4}\033[0m ]".format("Modified register","Code","Heap","Stack","String"))
 
 #改变文字的颜色
-def update_show_text_view_style(data,color,types):
+def update_show_text_view_style(data,color,types,step):
     if(types == LayoutView.tele_tag):
         if(color == LayoutView.color_format_value_pink or color == LayoutView.color_format_value_red):
-            print("\033[36m{0}\033[0m│+{1}: \033[{3}m{2}\033[0m  →  {4}".format(data[0],"0x%04x" % int(data[1],10),"0x%08x" % int(data[2],16),color,"0x%08x" % int(data[3],16)))
+            if step == "4":
+                print("\033[36m{0}\033[0m│+{1}: \033[{3}m{2}\033[0m  →  {4}".format(data[0],"0x%04x" % int(data[1],10),"0x%08x" % int(data[2],16),color,"0x%08x" % int(data[3],16)))
+            elif step == "8":
+                print("\033[36m{0}\033[0m│+{1}: \033[{3}m{2}\033[0m  →  {4}".format(data[0],"0x%04x" % int(data[1],10),"0x%016x" % int(data[2],16),color,"0x%016x" % int(data[3],16)))
         else:
-            print("\033[36m{0}\033[0m│+{1}: \033[{3}m{2}\033[0m".format(data[0],"0x%04x" % int(data[1],10),"0x%08x" % int(data[2],16),color))
+            if step == "4":
+                print("\033[36m{0}\033[0m│+{1}: \033[{3}m{2}\033[0m".format(data[0],"0x%04x" % int(data[1],10),"0x%08x" % int(data[2],16),color))
+            elif step == "8":
+                print("\033[36m{0}\033[0m│+{1}: \033[{3}m{2}\033[0m".format(data[0],"0x%04x" % int(data[1],10),"0x%016x" % int(data[2],16),color))
     elif(types == LayoutView.register_tag):
         if(color == LayoutView.color_format_value_pink or color == LayoutView.color_format_value_red):
-            print("\033[31m${0}\033[0m  : \033[{2}m{1}\033[0m  →  {3}".format("{:<3s}".format(data[0]),"0x%08x" % int(data[1],16),color,"0x%08x" % int(data[2],16)))
+            if step == "4":
+                print("\033[31m${0}\033[0m  : \033[{2}m{1}\033[0m  →  {3}".format("{:<3s}".format(data[0]),"0x%08x" % int(data[1],16),color,"0x%08x" % int(data[2],16)))
+            elif step == "8":
+                print("\033[31m${0}\033[0m  : \033[{2}m{1}\033[0m  →  {3}".format("{:<3s}".format(data[0]),"0x%016x" % int(data[1],16),color,"0x%016x" % int(data[2],16)))
         else:
-            print("\033[31m${0}\033[0m  : \033[{2}m{1}\033[0m".format("{:<3s}".format(data[0]),"0x%08x" % int(data[1],16),color))
+            if step == "4":
+                print("\033[31m${0}\033[0m  : \033[{2}m{1}\033[0m".format("{:<3s}".format(data[0]),"0x%08x" % int(data[1],16),color))
+            elif step == "8":
+                print("\033[31m${0}\033[0m  : \033[{2}m{1}\033[0m".format("{:<3s}".format(data[0]),"0x%016x" % int(data[1],16),color))
     else:
         return
