@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: UTF-8 -*-
 from style.layout import *
-import frida,sys
+import frida,sys,re
 
 
 if (len(sys.argv) < 3):
@@ -70,15 +70,48 @@ Usage : [options] [value] [--]
 '''
 
 #====================Call JavaScript function====================
+RE_MATH_EVAL = '(0x)?[0-9a-z]{4,16}(\+|\-)\d'
+
 def telescope(argv):
-    script.exports.telescope(argv[0])
+    address = argv[0]
+    if(not re.match(RE_MATH_EVAL,address) is None):
+        address = str(hex(eval(address)))
+    script.exports.telescope(address)
 
 def print_address(argv,carry=10):
-    value = script.exports.readpointer(argv[0])
+    address = argv[0]
+    if(not re.match(RE_MATH_EVAL,address) is None):
+        address = str(hex(eval(address)))
+    value = script.exports.read_pointer(address)
     if carry == 16:
-        print(str(argv[0]) + " -> " + value)
+        print(address + " -> " + value)
     else:
         print(str(int(value,16)))
+
+def read_String(argv):
+    address = argv[0]
+    coding = "utf8"
+    if(not re.match(RE_MATH_EVAL,address) is None):
+        address = str(hex(eval(address)))
+    if len(argv) > 1:
+        coding = argv[1]
+    string = script.exports.read_string(address,coding)
+    print(string)
+
+def hexdump(argv):
+    address = argv[0]
+    size = 0x30
+    if(not re.match(RE_MATH_EVAL,address) is None):
+        address = str(hex(eval(address)))
+    if (len(argv) > 1):
+        size = argv[1]
+        try:
+            size = int(size,10)
+        except:
+            size = int(size,16)
+
+    value = script.exports.phexdump(address,size)
+
 #========================= End =========================
 
 LOGO = "\033[31mYJ ➤ \033[0m"
@@ -110,8 +143,12 @@ while True:
         print_address(argv,10)
     elif(cmd == "x" and (not argv is None)):
         print_address(argv,16)
+    elif((cmd == "hexdump" or cmd == "hd") and (not argv is None)):
+        hexdump(argv)
     elif((cmd == "telescope" or cmd == "tele") and (not argv is None)):
         telescope(argv)
+    elif((cmd == "string" or cmd == "s") and (not argv is None)):
+        read_String(argv)
     else:
         print("Option does not exist : \"%s\".  Try \"help\"" % cmd)
 

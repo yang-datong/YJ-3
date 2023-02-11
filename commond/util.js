@@ -34,14 +34,34 @@ rpc.exports.init = mjson => {
 
 //====================Used to provide python call====================
 rpc.exports.telescope = address => {
-	//console.log("js -> telescope: "+address);
 	show_telescope_view(new NativePointer(address), VIEW_TELESCOPE);
 }
 
-rpc.exports.readpointer = address => {
-	//console.log("js -> readpointer: "+address);
-	let pointer = new NativePointer(address);
-	return pointer.readPointer();
+rpc.exports.readPointer = address => {
+	return new NativePointer(address).readPointer();
+}
+
+rpc.exports.phexdump = function(address,size){
+	dump(new NativePointer(address),size)
+}
+
+rpc.exports.readString = function(address,coding){
+	var str;
+	try{
+	if (coding === "utf8")
+		str = new NativePointer(address).readUtf8String();
+	else if (coding === "c")
+		str = new NativePointer(address).readCString();
+	else if (coding === "utf16")
+		str = new NativePointer(address).readUrf16String();
+	else if (coding === "ansi")
+		str = new NativePointer(address).readAnsiString();
+	else
+		str = new NativePointer(address).readUtf8String();
+	}catch{
+		str = 'Don\'t found match string'
+	}
+	return str;
 }
 //=============================== End ===============================
 
@@ -142,7 +162,6 @@ function show_telescope_view(...args) {
 		} catch {
 			ptr = 0;
 		}
-
 		data += (addr + '│' + (i * step) + '│' + _addr + '│' + ptr + TELE_TAG);
 		addr = addr.add(step);
 	}
