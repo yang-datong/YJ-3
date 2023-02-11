@@ -32,38 +32,51 @@ rpc.exports.init = mjson => {
 	TELE_SHOW_ROW_NUMBER = mjson.tele_show_row_number;
 };
 
-//====================Used to provide python call====================
+// --------------------Used to provide python call--------------------
 rpc.exports.telescope = address => {
 	show_telescope_view(new NativePointer(address), VIEW_TELESCOPE);
-}
+};
 
-rpc.exports.readPointer = address => {
-	return new NativePointer(address).readPointer();
-}
+rpc.exports.readPointer = address => new NativePointer(address).readPointer();
 
-rpc.exports.phexdump = function(address,size){
-	dump(new NativePointer(address),size)
-}
+rpc.exports.phexdump = function (address, size) {
+	dump(new NativePointer(address), size);
+};
 
-rpc.exports.readString = function(address,coding){
-	var str;
-	try{
-	if (coding === "utf8")
-		str = new NativePointer(address).readUtf8String();
-	else if (coding === "c")
-		str = new NativePointer(address).readCString();
-	else if (coding === "utf16")
-		str = new NativePointer(address).readUrf16String();
-	else if (coding === "ansi")
-		str = new NativePointer(address).readAnsiString();
-	else
-		str = new NativePointer(address).readUtf8String();
-	}catch{
-		str = 'Don\'t found match string'
+rpc.exports.readString = function (address, coding) {
+	let string_;
+	try {
+		switch (coding) {
+			case 'utf8': {
+				string_ = new NativePointer(address).readUtf8String();
+				break;
+			}
+
+			case 'c': {
+				string_ = new NativePointer(address).readCString();
+				break;
+			}
+
+			case 'utf16': {
+				string_ = new NativePointer(address).readUrf16String();
+				break;
+			}
+
+			case 'ansi': {
+				string_ = new NativePointer(address).readAnsiString();
+				break;
+			}
+
+			default: { string_ = new NativePointer(address).readUtf8String();
+			}
+		}
+	} catch {
+		string_ = 'Don\'t found match string';
 	}
-	return str;
-}
-//=============================== End ===============================
+
+	return string_;
+};
+// ------------------------------- End -------------------------------
 
 // 变量区
 const message_tag = ' log ';
@@ -80,7 +93,7 @@ const log = (...info) => {
 
 const dump = (...ptr) => {
 	if (ptr[1] == undefined) {
-		return send(hexdump(ptr[0], {offset: 0, length: 0x30, header: true, ansi: true}));
+		ptr[1] = 0x30;
 	}
 
 	return send(hexdump(ptr[0], {offset: 0, length: ptr[1], header: true, ansi: true}));
@@ -162,6 +175,7 @@ function show_telescope_view(...args) {
 		} catch {
 			ptr = 0;
 		}
+
 		data += (addr + '│' + (i * step) + '│' + _addr + '│' + ptr + TELE_TAG);
 		addr = addr.add(step);
 	}
@@ -182,7 +196,7 @@ const REGISTER_CHECK_IS_LR_MODE = true;
 
 function show_registers(...args) {
 	const context = args[0];
-	var IS_CHECKED_LR = false
+	let IS_CHECKED_LR = false;
 	let data = '';
 	let addr; let ptr;
 	for (const key in context) {
@@ -211,13 +225,13 @@ function show_registers(...args) {
 				data += (key + '│' + addr + '│' + ptr + REGISTER_TAG);
 			}
 		} else if (REGISTER_CHECK_IS_LR_MODE) {
-			if (key == "lr") {
-				IS_CHECKED_LR = true
+			if (key == 'lr') {
+				IS_CHECKED_LR = true;
 			}
+
 			if (IS_CHECKED_LR) {
 				data += (key + '│' + addr + '│' + ptr + REGISTER_TAG);
 			}
-
 		} else if (addr > 0) {
 			data += (key + '│' + addr + '│' + ptr + REGISTER_TAG);
 		}
