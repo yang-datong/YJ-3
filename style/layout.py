@@ -48,6 +48,8 @@ class LayoutView:
             LayoutView.message_tag = LayoutView.view_code
         elif LayoutView.view_trace in self.payload:
             LayoutView.message_tag = LayoutView.view_trace
+        elif LayoutView.view_telescope in self.payload:
+            LayoutView.message_tag = LayoutView.view_telescope
         else:
             LayoutView.message_tag = " send "
 
@@ -136,6 +138,7 @@ def get_config_info():
     LayoutView.view_code = mjson['view_code']
     LayoutView.view_trace = mjson['view_trace']
     LayoutView.view_registers = mjson['view_registers']
+    LayoutView.view_telescope= mjson['view_telescope']
 
     LayoutView.clear_tag = mjson['clear_tag']
     LayoutView.message_tag = mjson['message_tag']

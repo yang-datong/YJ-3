@@ -8,6 +8,7 @@
    "view_code": " code ",
    "view_trace": " trace ",
    "view_registers": " registers ",
+   "view_telescope": " telescope ",
 
    "clear_tag": "$$$$clear_tag$$$$",
    "message_tag": "$$$$message_tag$$$$",

@@ -6,6 +6,7 @@ let VIEW_STACK;
 let VIEW_CODE;
 let VIEW_TRACE;
 let VIEW_REGISTERS;
+let VIEW_TELESCOPE;
 let CLEAR_TAG;
 let TELE_TAG;
 let CODE_TAG;
@@ -21,6 +22,7 @@ rpc.exports.init = mjson => {
 	VIEW_CODE = mjson.view_code;
 	VIEW_TRACE = mjson.view_trace;
 	VIEW_REGISTERS = mjson.view_registers;
+	VIEW_TELESCOPE = mjson.view_telescope;
 	CLEAR_TAG = mjson.clear_tag;
 	CODE_TAG = mjson.code_tag;
 	TRACE_TAG = mjson.trace_tag;
@@ -29,6 +31,19 @@ rpc.exports.init = mjson => {
 	INIT_SEGMENT_ADDRESS_TAG = mjson.init_segment_address_tag;
 	TELE_SHOW_ROW_NUMBER = mjson.tele_show_row_number;
 };
+
+//====================Used to provide python call====================
+rpc.exports.telescope = address => {
+	//console.log("js -> telescope: "+address);
+	show_telescope_view(new NativePointer(address), VIEW_TELESCOPE);
+}
+
+rpc.exports.readpointer = address => {
+	//console.log("js -> readpointer: "+address);
+	let pointer = new NativePointer(address);
+	return pointer.readPointer();
+}
+//=============================== End ===============================
 
 // 变量区
 const message_tag = ' log ';
