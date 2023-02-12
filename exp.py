@@ -98,6 +98,14 @@ def read_String(argv):
     string = script.exports.read_string(address,coding)
     print(string)
 
+
+def show_all_view():
+    script.exports.show_all_view()
+
+def libc_base_address():
+    address = script.exports.libc_base_address()
+    print("\033[34mlibc :\033[0m \033[37m%s\033[0m" % address)
+
 def trace(argv):
     if argv is None:
         script.exports.trace()
@@ -139,13 +147,16 @@ while True:
         continue
     #==================== Shell command ====================
     if (cmd == "quit" or cmd == "q"):
-        #process.detach()
         sys.exit(0)
     elif(cmd == "clear" or cmd == "cl"):
         os.system("clear")
     elif(cmd == "ls"):
         os.system(cmd)
     #==================== Frida command ====================
+    elif (cmd == "main" or cmd == "m"):
+        show_all_view()
+    elif(cmd == "libc" or cmd == "lib"):
+        libc_base_address()
     elif(cmd == "trace" or cmd == "t"):
         trace(argv)
     elif(cmd == "p" and (not argv is None)):

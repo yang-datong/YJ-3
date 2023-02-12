@@ -33,14 +33,24 @@ rpc.exports.init = mjson => {
 };
 
 // --------------------Used to provide python call--------------------
-rpc.exports.telescope = address => {
-	show_telescope_view(new NativePointer(address), VIEW_TELESCOPE);
-};
+rpc.exports.libcBaseAddress = () => libc_base_address;
 
 rpc.exports.readPointer = address => new NativePointer(address).readPointer();
 
+rpc.exports.telescope = address => {
+	try{
+		show_telescope_view(new NativePointer(address), VIEW_TELESCOPE);
+	}catch(e){
+		console.log(e);
+	}
+};
+
 rpc.exports.phexdump = function (address, size) {
-	dump(new NativePointer(address), size);
+	try{
+		dump(new NativePointer(address), size);
+	}catch(e){
+		console.log(e);
+	}
 };
 
 rpc.exports.trace = model => {
@@ -50,6 +60,14 @@ rpc.exports.trace = model => {
 		model = Backtracer.FUZZY;
 	show_trace_view(globalContext,model)
 };
+
+rpc.exports.showAllView = address => {
+	try{
+		ls(globalContext);
+	}catch(e){
+		console.log(e);
+	}
+}
 
 rpc.exports.readString = function (address, coding) {
 	let string_;
@@ -78,8 +96,8 @@ rpc.exports.readString = function (address, coding) {
 			default: { string_ = new NativePointer(address).readUtf8String();
 			}
 		}
-	} catch {
-		string_ = 'Don\'t found match string';
+	} catch (e) {
+		string_ = 'Don\'t found match string -> ' + e;
 	}
 
 	return string_;
@@ -92,6 +110,7 @@ const _width = 70;
 let step = 4; // 默认32bit
 let arch;
 var globalContext;
+var libc_base_address;
 
 const log = (...info) => {
 	const befor = Array.from({length: _width - END_LINE_LEN - message_tag.length + 1}).join('=');
@@ -127,9 +146,9 @@ function tele(...args) {
 	show_telescope_view(...args);
 }
 
-function ls(ctx, lib_base) {
+function ls(ctx) {
 	globalContext = ctx;
-	show_view(ctx, lib_base);
+	show_view(ctx);
 }
 
 // -------------------------func-------------------------------
@@ -157,31 +176,40 @@ function b(...args) {
 
 	Interceptor.attach(addr, {
 		onEnter(args) {
-			if (is_clear != undefined) {
+			if (is_clear != undefined)
 				send(CLEAR_TAG);
-			}
-
-			// Show_view(this.context)
-			if (on_enter != undefined) {
+			if (on_enter != undefined)
 				on_enter(this.context);
-			}
 		}, onLeave(returnValue) {
-			if (on_leave != undefined) {
+			if (on_leave != undefined)
 				on_leave(this.context);
-			}
 		},
 	});
 }
 
 // 显示一个指针块视图
 function show_telescope_view(...args) {
-	let data = '';
+	let data = '',str = '';
 	let addr = args[0];
 	let _addr; let ptr;
 	for (let i = 0; i < TELE_SHOW_ROW_NUMBER; i++) {
-		_addr = addr.readPointer();
+		try{
+			try{
+				_addr = addr.readUtf8String();
+				if (_addr.replace(/(^s*)|(s*$)/g, "").length == 0)
+					_addr = addr.readPointer();
+			}catch{
+				_addr = addr.readPointer();
+			}
+		}catch{
+			_addr = 0
+		}
+
 		try {
-			ptr = _addr.readPointer();
+			//TODO multiple pointer
+			//ptr = _addr.readPointer();
+			//ptr = _addr.readUtf8String();
+			ptr = 0;
 		} catch {
 			ptr = 0;
 		}
@@ -190,11 +218,10 @@ function show_telescope_view(...args) {
 		addr = addr.add(step);
 	}
 
-	if (args[1] != null) {
+	if (args[1] != null)
 		send([data, args[1]]);
-	} else {
+	else
 		send(data);
-	}
 }
 
 // 寄存器视图
@@ -210,41 +237,25 @@ function show_registers(...args) {
 	let data = '';
 	let addr; let ptr;
 	for (const key in context) {
+		if (key != 'lr' && !IS_CHECKED_LR)
+			continue
+		IS_CHECKED_LR = true;
 		addr = context[key];
+
 		try {
-			ptr = addr.readPointer();
+			try{
+				ptr = addr.readUtf8String();
+				if (ptr.replace(/(^s*)|(s*$)/g, "").length == 0 ||
+					key === "pc" || key === "sp" || key === "lr")
+					ptr = addr.readPointer();
+			}catch{
+				ptr = addr.readPointer();
+			}
 		} catch {
-			ptr = 0;
+			ptr = 0
 		}
 
-		if (REGISTER_FAZY_ZERO_VALUE_FILTERING_MODE) {
-			if (addr <= 0) {
-				skipCache += (key + '│' + addr + '│' + ptr + REGISTER_TAG);
-				skipCount--;
-				if (skipCount == 0) {
-					skipCount = maxSkipCount;
-					skipCache = '';
-				}
-			} else {
-				if (skipCount = maxSkipCount - 1) {
-					data += skipCache;
-					skipCache = '';
-					skipCount = maxSkipCount;
-				}
-
-				data += (key + '│' + addr + '│' + ptr + REGISTER_TAG);
-			}
-		} else if (REGISTER_CHECK_IS_LR_MODE) {
-			if (key == 'lr') {
-				IS_CHECKED_LR = true;
-			}
-
-			if (IS_CHECKED_LR) {
-				data += (key + '│' + addr + '│' + ptr + REGISTER_TAG);
-			}
-		} else if (addr > 0) {
-			data += (key + '│' + addr + '│' + ptr + REGISTER_TAG);
-		}
+		data += (key + '│' + addr + '│' + ptr + REGISTER_TAG);
 	}
 
 	send([data, VIEW_REGISTERS]);
@@ -261,7 +272,7 @@ function init_segment_address(context) {
 }
 
 // 显示所有布局视图
-function show_view(context, lib_base) {
+function show_view(context) {
 	init_segment_address(context);
 	show_registers(context);
 	show_telescope_view(context.sp, VIEW_STACK); // 栈空间视图
@@ -295,6 +306,7 @@ function show_code_view(ctx) {
 		offset};
 
 	const data = JSON.stringify(object) + CODE_TAG;
+	libc_base_address = base
 	send([data, VIEW_CODE + arch]); // 标记为送往code段的数据
 }
 

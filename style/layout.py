@@ -70,11 +70,25 @@ class LayoutView:
         split = self.payload.split(LayoutView.tele_tag)
         for i in range(len(split)-1):
             data = split[i].split("│")
-            if(int(data[2],16) == 0): #值为0 显示灰色
+            #isPointer = False
+            isString = False
+            #isInstruction = False
+            try:
+                pointer = int(data[2],16)
+            except:
+                #isPointer = False
+                isString = True
+                #isInstruction = False
+
+            if isString == True: #指针为字符串表示不需要进行探测多级指针
+                update_show_text_view_style(data,LayoutView.color_format_value_yellow,LayoutView.tele_tag,self.step)
+                continue
+
+            if(pointer == 0): #值为0 显示灰色
                 update_show_text_view_style(data,LayoutView.color_format_value_grey,LayoutView.tele_tag,self.step)
-            elif(self.stack_base != 0 and hex(int(data[2],16) >>16<<16) == self.stack_base):
+            elif(self.stack_base != 0 and hex(pointer >>16<<16) == self.stack_base):
                 update_show_text_view_style(data,LayoutView.color_format_value_pink,LayoutView.tele_tag,self.step)
-            elif(self.code_base != 0 and hex(int(data[2],16) >>16<<16) == self.code_base):
+            elif(self.code_base != 0 and hex(pointer >>16<<16) == self.code_base):
                 update_show_text_view_style(data,LayoutView.color_format_value_red,LayoutView.tele_tag,self.step)
             else:
                 update_show_text_view_style(data,LayoutView.color_format_value_bule,LayoutView.tele_tag,self.step)
@@ -84,6 +98,21 @@ class LayoutView:
         split = self.payload.split(LayoutView.register_tag)
         for i in range(len(split)-1):
             data = split[i].split("│")
+            #print(data)
+            #isPointer = False
+            isString = False
+            #isInstruction = False
+            try:
+                pointer = int(data[2],16)
+            except:
+                #isPointer = False
+                isString = True
+                #isInstruction = False
+
+            if isString == True: #指针为字符串表示不需要进行探测多级指针
+                update_show_text_view_style(data,LayoutView.color_format_value_yellow,LayoutView.register_tag,self.step)
+                continue
+
             if(int(data[1],16) == 0):
                 update_show_text_view_style(data,LayoutView.color_format_value_grey,LayoutView.register_tag,self.step)
             elif(self.stack_base != 0 and hex(int(data[1],16) >>16<<16) == self.stack_base):
@@ -189,29 +218,57 @@ def dump_target_binary(path,lib_name,row,offset):
 def show_head_view_tips_info_color():
     print("[ Legend: \033[31m{0}\033[0m | \033[31m{1}\033[0m | \033[32m{2}\033[0m | \033[35m{3}\033[0m | \033[33m{4}\033[0m ]".format("Modified register","Code","Heap","Stack","String"))
 
+
+def GREY(text):
+    return "\033[0m"+str(text)+"\033[0m"
+def RED(text):
+    return "\033[31m"+str(text)+"\033[0m"
+def GREEN(text):
+    return "\033[32m"+str(text)+"\033[0m"
+def YELLOW(text):
+    return "\033[33m"+str(text)+"\033[0m"
+def BULE(text):
+    return "\033[34m"+str(text)+"\033[0m"
+def PINK(text):
+    return "\033[35m"+str(text)+"\033[0m"
+def CYAN(text):
+    return "\033[36m"+str(text)+"\033[0m"
+def WHITE(text):
+    return "\033[37m"+str(text)+"\033[0m"
+def PURPLE(text):
+    return "\033[95m"+str(text)+"\033[0m"
+
+ADDRESS_JUMP_STEP_COUNT_FORMAT = "0x%04x"
+BIT_32_COUNT_FORMAT = "0x%08x"
+BIT_64_COUNT_FORMAT = "0x%014x"
+
 #改变文字的颜色
-def update_show_text_view_style(data,color,types,step):
+def update_show_text_view_style(data,color,types,step = "4"):
+    _format = BIT_64_COUNT_FORMAT
+    if step == "4":
+        _format = BIT_32_COUNT_FORMAT
+    one = data[0] #Could be String($pc) or Interger(0x...)
+    two = data[1] #Could be Address or Step or String
+    if len(data) > 2:
+        three = data[2]
+    if len(data) > 3:
+        four = data[3]
+
     if(types == LayoutView.tele_tag):
-        if(color == LayoutView.color_format_value_pink or color == LayoutView.color_format_value_red):
-            if step == "4":
-                print("\033[36m{0}\033[0m│+{1}: \033[{3}m{2}\033[0m  →  {4}".format(data[0],"0x%04x" % int(data[1],10),"0x%08x" % int(data[2],16),color,"0x%08x" % int(data[3],16)))
-            elif step == "8":
-                print("\033[36m{0}\033[0m│+{1}: \033[{3}m{2}\033[0m  →  {4}".format(data[0],"0x%04x" % int(data[1],10),"0x%014x" % int(data[2],16),color,"0x%014x" % int(data[3],16)))
+        if(color == LayoutView.color_format_value_pink or
+           color == LayoutView.color_format_value_red):
+            print("\033[36m{0}\033[0m│+{1}: \033[{3}m{2}\033[0m  →  {4}".format(one,ADDRESS_JUMP_STEP_COUNT_FORMAT % int(two,10),_format % int(three,16),color,_format % int(four,16)))
+        elif(color == LayoutView.color_format_value_yellow):
+            print("\033[36m{0}\033[0m│+{1}: \033[{3}m\"{2}\"\033[0m".format(one,ADDRESS_JUMP_STEP_COUNT_FORMAT % int(two,10),three,color))
         else:
-            if step == "4":
-                print("\033[36m{0}\033[0m│+{1}: \033[{3}m{2}\033[0m".format(data[0],"0x%04x" % int(data[1],10),"0x%08x" % int(data[2],16),color))
-            elif step == "8":
-                print("\033[36m{0}\033[0m│+{1}: \033[{3}m{2}\033[0m".format(data[0],"0x%04x" % int(data[1],10),"0x%014x" % int(data[2],16),color))
+            print("\033[36m{0}\033[0m│+{1}: \033[{3}m{2}\033[0m".format(one,ADDRESS_JUMP_STEP_COUNT_FORMAT % int(two,10),_format % int(three,16),color))
     elif(types == LayoutView.register_tag):
-        if(color == LayoutView.color_format_value_pink or color == LayoutView.color_format_value_red):
-            if step == "4":
-                print("\033[31m${0}\033[0m  : \033[{2}m{1}\033[0m  →  {3}".format("{:<3s}".format(data[0]),"0x%08x" % int(data[1],16),color,"0x%08x" % int(data[2],16)))
-            elif step == "8":
-                print("\033[31m${0}\033[0m  : \033[{2}m{1}\033[0m  →  {3}".format("{:<3s}".format(data[0]),"0x%014x" % int(data[1],16),color,"0x%014x" % int(data[2],16)))
+        if(color == LayoutView.color_format_value_pink or
+           color == LayoutView.color_format_value_red):
+            print("\033[31m${0}\033[0m  : \033[{2}m{1}\033[0m  →  {3}".format("{:<3s}".format(one),_format % int(two,16),color,_format % int(three,16)))
+        elif(color == LayoutView.color_format_value_yellow):
+            print("\033[31m${0}\033[0m  : \033[{2}m\"{1}\"\033[0m".format("{:<3s}".format(one),three,color))
         else:
-            if step == "4":
-                print("\033[31m${0}\033[0m  : \033[{2}m{1}\033[0m".format("{:<3s}".format(data[0]),"0x%08x" % int(data[1],16),color))
-            elif step == "8":
-                print("\033[31m${0}\033[0m  : \033[{2}m{1}\033[0m".format("{:<3s}".format(data[0]),"0x%014x" % int(data[1],16),color))
+            print("\033[31m${0}\033[0m  : \033[{2}m{1}\033[0m".format("{:<3s}".format(one),_format % int(two,16),color))
     else:
         return
