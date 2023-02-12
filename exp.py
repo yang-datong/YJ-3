@@ -1,8 +1,7 @@
 #!/usr/local/bin/python3.9
 # -*- coding: UTF-8 -*-
-from style.layout import *
+from commond.layout import *
 import frida,sys,re
-
 
 if (len(sys.argv) < 3):
     print("\033[31mPlease input script\033[0m, such as ->\033[32m python3 exp.py script.js\033[0m")

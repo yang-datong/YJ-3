@@ -38,36 +38,33 @@ rpc.exports.libcBaseAddress = () => libc_base_address;
 rpc.exports.readPointer = address => new NativePointer(address).readPointer();
 
 rpc.exports.telescope = address => {
-	try{
+	try {
 		show_telescope_view(new NativePointer(address), VIEW_TELESCOPE);
-	}catch(e){
-		console.log(e);
+	} catch (error) {
+		console.log(error);
 	}
 };
 
 rpc.exports.phexdump = function (address, size) {
-	try{
+	try {
 		dump(new NativePointer(address), size);
-	}catch(e){
-		console.log(e);
+	} catch (error) {
+		console.log(error);
 	}
 };
 
 rpc.exports.trace = model => {
-	if (model == undefined)
-		model = Backtracer.ACCURATE;
-	else
-		model = Backtracer.FUZZY;
-	show_trace_view(globalContext,model)
+	model = model == undefined ? Backtracer.ACCURATE : Backtracer.FUZZY;
+	show_trace_view(globalContext, model);
 };
 
 rpc.exports.showAllView = address => {
-	try{
+	try {
 		ls(globalContext);
-	}catch(e){
-		console.log(e);
+	} catch (error) {
+		console.log(error);
 	}
-}
+};
 
 rpc.exports.readString = function (address, coding) {
 	let string_;
@@ -96,8 +93,8 @@ rpc.exports.readString = function (address, coding) {
 			default: { string_ = new NativePointer(address).readUtf8String();
 			}
 		}
-	} catch (e) {
-		string_ = 'Don\'t found match string -> ' + e;
+	} catch (error) {
+		string_ = 'Don\'t found match string -> ' + error;
 	}
 
 	return string_;
@@ -109,8 +106,8 @@ const message_tag = ' log ';
 const _width = 70;
 let step = 4; // 默认32bit
 let arch;
-var globalContext;
-var libc_base_address;
+let globalContext;
+let libc_base_address;
 
 const log = (...info) => {
 	const befor = Array.from({length: _width - END_LINE_LEN - message_tag.length + 1}).join('=');
@@ -176,39 +173,44 @@ function b(...args) {
 
 	Interceptor.attach(addr, {
 		onEnter(args) {
-			if (is_clear != undefined)
+			if (is_clear != undefined) {
 				send(CLEAR_TAG);
-			if (on_enter != undefined)
+			}
+
+			if (on_enter != undefined) {
 				on_enter(this.context);
+			}
 		}, onLeave(returnValue) {
-			if (on_leave != undefined)
+			if (on_leave != undefined) {
 				on_leave(this.context);
+			}
 		},
 	});
 }
 
 // 显示一个指针块视图
 function show_telescope_view(...args) {
-	let data = '',str = '';
+	let data = '';
 	let addr = args[0];
 	let _addr; let ptr;
 	for (let i = 0; i < TELE_SHOW_ROW_NUMBER; i++) {
-		try{
-			try{
+		try {
+			try {
 				_addr = addr.readUtf8String();
-				if (_addr.replace(/(^s*)|(s*$)/g, "").length == 0)
+				if (_addr.replace(/(^s*)|(s*$)/g, '').length === 0) {
 					_addr = addr.readPointer();
-			}catch{
+				}
+			} catch {
 				_addr = addr.readPointer();
 			}
-		}catch{
-			_addr = 0
+		} catch {
+			_addr = 0;
 		}
 
 		try {
-			//TODO multiple pointer
-			//ptr = _addr.readPointer();
-			//ptr = _addr.readUtf8String();
+			// TODO multiple pointer
+			// ptr = _addr.readPointer();
+			// ptr = _addr.readUtf8String();
 			ptr = 0;
 		} catch {
 			ptr = 0;
@@ -218,16 +220,17 @@ function show_telescope_view(...args) {
 		addr = addr.add(step);
 	}
 
-	if (args[1] != null)
+	if (args[1] != null) {
 		send([data, args[1]]);
-	else
+	} else {
 		send(data);
+	}
 }
 
 // 寄存器视图
 const maxSkipCount = 3;
-let skipCount = maxSkipCount;
-let skipCache = '';
+const skipCount = maxSkipCount;
+const skipCache = '';
 const REGISTER_FAZY_ZERO_VALUE_FILTERING_MODE = false;
 const REGISTER_CHECK_IS_LR_MODE = true;
 
@@ -237,22 +240,25 @@ function show_registers(...args) {
 	let data = '';
 	let addr; let ptr;
 	for (const key in context) {
-		if (key != 'lr' && !IS_CHECKED_LR)
-			continue
+		if (key != 'lr' && !IS_CHECKED_LR) {
+			continue;
+		}
+
 		IS_CHECKED_LR = true;
 		addr = context[key];
 
 		try {
-			try{
+			try {
 				ptr = addr.readUtf8String();
-				if (ptr.replace(/(^s*)|(s*$)/g, "").length == 0 ||
-					key === "pc" || key === "sp" || key === "lr")
+				if (ptr.replace(/(^s*)|(s*$)/g, '').length === 0
+					|| key === 'pc' || key === 'sp' || key === 'lr') {
 					ptr = addr.readPointer();
-			}catch{
+				}
+			} catch {
 				ptr = addr.readPointer();
 			}
 		} catch {
-			ptr = 0
+			ptr = 0;
 		}
 
 		data += (key + '│' + addr + '│' + ptr + REGISTER_TAG);
@@ -277,14 +283,16 @@ function show_view(context) {
 	show_registers(context);
 	show_telescope_view(context.sp, VIEW_STACK); // 栈空间视图
 	show_code_view(context);
-	//show_trace_view(context,Backtracer.FUZZY)
+	// Show_trace_view(context,Backtracer.FUZZY)
 }
 
-function show_trace_view(ctx,model) {
-	if (model == undefined)
+function show_trace_view(ctx, model) {
+	if (model == undefined) {
 		model = Backtracer.ACCURATE;
-		//model = Backtracer.FUZZY;
-	send([Thread.backtrace(ctx, model).map(DebugSymbol.fromAddress).join('\n') + TRACE_TAG,VIEW_TRACE]);
+	}
+
+	// Model = Backtracer.FUZZY;
+	send([Thread.backtrace(ctx, model).map(DebugSymbol.fromAddress).join('\n') + TRACE_TAG, VIEW_TRACE]);
 }
 
 function show_code_view(ctx) {
@@ -306,7 +314,7 @@ function show_code_view(ctx) {
 		offset};
 
 	const data = JSON.stringify(object) + CODE_TAG;
-	libc_base_address = base
+	libc_base_address = base;
 	send([data, VIEW_CODE + arch]); // 标记为送往code段的数据
 }
 
