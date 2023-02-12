@@ -58,14 +58,19 @@ chose='''
 Usage : [options] [value] [--]
 
     Options:
-    h|help          Display this message
-    v|version       Display script version
-    q|quit          Exit frida
-    cl|clear        Clean screen
-    ls              Display current list
-    p               Display pointer value
-    x               Display pointer hexadecimal value
-    tele|telescope  Display multiple line memory space
+    h|help                      Display this message
+    v|version                   Display script version
+    q|quit                      Exit frida
+    cl|clear                    Clean screen
+    ls                          Display current list
+    m|main                      Display all view
+    lib                         Print current target dynamic library base address
+    t|trace [accurate/fuzzy]    Display called function list(default fuzzy)
+    p [pointer]                 Display pointer value
+    x [pointer]                 Display pointer hexadecimal value
+    hd|hexdump [pointer]        Display target memory space
+    tele|telescope [pointer]    Display multiple line memory space
+    s|string [pointer]          Print target address character(default utf-8)
 '''
 
 #====================Call JavaScript function====================
@@ -127,7 +132,7 @@ def hexdump(argv):
 
 #========================= End =========================
 
-LOGO = "\033[31mYJ ➤ \033[0m"
+LOGO = "\n\033[31mYJ ➤ \033[0m"
 
 while True:
     cmd = input(LOGO)
@@ -154,7 +159,7 @@ while True:
     #==================== Frida command ====================
     elif (cmd == "main" or cmd == "m"):
         show_all_view()
-    elif(cmd == "libc" or cmd == "lib"):
+    elif(cmd == "lib"):
         libc_base_address()
     elif(cmd == "trace" or cmd == "t"):
         trace(argv)
