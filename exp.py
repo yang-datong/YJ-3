@@ -98,6 +98,12 @@ def read_String(argv):
     string = script.exports.read_string(address,coding)
     print(string)
 
+def trace(argv):
+    if argv is None:
+        script.exports.trace()
+    elif ((not argv[0] is None) and (argv[0] == "f" or argv[0] == "fuzzy") ):
+        script.exports.trace("FUZZY")
+
 def hexdump(argv):
     address = argv[0]
     size = 0x30
@@ -140,6 +146,8 @@ while True:
     elif(cmd == "ls"):
         os.system(cmd)
     #==================== Frida command ====================
+    elif(cmd == "trace" or cmd == "t"):
+        trace(argv)
     elif(cmd == "p" and (not argv is None)):
         print_address(argv,10)
     elif(cmd == "x" and (not argv is None)):

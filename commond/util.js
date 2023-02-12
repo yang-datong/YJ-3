@@ -43,6 +43,14 @@ rpc.exports.phexdump = function (address, size) {
 	dump(new NativePointer(address), size);
 };
 
+rpc.exports.trace = model => {
+	if (model == undefined)
+		model = Backtracer.ACCURATE;
+	else
+		model = Backtracer.FUZZY;
+	show_trace_view(globalContext,model)
+};
+
 rpc.exports.readString = function (address, coding) {
 	let string_;
 	try {
@@ -83,6 +91,7 @@ const message_tag = ' log ';
 const _width = 70;
 let step = 4; // 默认32bit
 let arch;
+var globalContext;
 
 const log = (...info) => {
 	const befor = Array.from({length: _width - END_LINE_LEN - message_tag.length + 1}).join('=');
@@ -119,6 +128,7 @@ function tele(...args) {
 }
 
 function ls(ctx, lib_base) {
+	globalContext = ctx;
 	show_view(ctx, lib_base);
 }
 
@@ -256,12 +266,14 @@ function show_view(context, lib_base) {
 	show_registers(context);
 	show_telescope_view(context.sp, VIEW_STACK); // 栈空间视图
 	show_code_view(context);
-	// Show_trace_view(context) //卡顿严重 暂时不开放!!!!
+	//show_trace_view(context,Backtracer.FUZZY)
 }
 
-function show_trace_view(ctx) {
-	const data = Thread.backtrace(ctx, Backtracer.ACCURATE).map(DebugSymbol.fromAddress).join('\n') + TRACE_TAG;
-	send([data, VIEW_TRACE]);
+function show_trace_view(ctx,model) {
+	if (model == undefined)
+		model = Backtracer.ACCURATE;
+		//model = Backtracer.FUZZY;
+	send([Thread.backtrace(ctx, model).map(DebugSymbol.fromAddress).join('\n') + TRACE_TAG,VIEW_TRACE]);
 }
 
 function show_code_view(ctx) {

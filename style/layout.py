@@ -93,9 +93,13 @@ class LayoutView:
             else:
                 update_show_text_view_style(data,LayoutView.color_format_value_bule,LayoutView.register_tag,self.step)
 
+    #显示函数调用栈视图
     def show_trace_view(self):
-        split = self.payload.split(LayoutView.trace_tag)
-        print(split)
+        split = self.payload.split(LayoutView.trace_tag)[0].split("\n")
+        for i in range(len(split)-1):
+            data = split[i].split(" ")
+            if ((len(data) >= 2) and (not data[1] is None)):
+                print("[\033[35m#%d\033[0m] %s → \033[32m%s\033[0m" % (i,data[0],data[1]))
 
     #格式化代码段视图
     def show_code_view(self):
@@ -192,22 +196,22 @@ def update_show_text_view_style(data,color,types,step):
             if step == "4":
                 print("\033[36m{0}\033[0m│+{1}: \033[{3}m{2}\033[0m  →  {4}".format(data[0],"0x%04x" % int(data[1],10),"0x%08x" % int(data[2],16),color,"0x%08x" % int(data[3],16)))
             elif step == "8":
-                print("\033[36m{0}\033[0m│+{1}: \033[{3}m{2}\033[0m  →  {4}".format(data[0],"0x%04x" % int(data[1],10),"0x%016x" % int(data[2],16),color,"0x%016x" % int(data[3],16)))
+                print("\033[36m{0}\033[0m│+{1}: \033[{3}m{2}\033[0m  →  {4}".format(data[0],"0x%04x" % int(data[1],10),"0x%014x" % int(data[2],16),color,"0x%014x" % int(data[3],16)))
         else:
             if step == "4":
                 print("\033[36m{0}\033[0m│+{1}: \033[{3}m{2}\033[0m".format(data[0],"0x%04x" % int(data[1],10),"0x%08x" % int(data[2],16),color))
             elif step == "8":
-                print("\033[36m{0}\033[0m│+{1}: \033[{3}m{2}\033[0m".format(data[0],"0x%04x" % int(data[1],10),"0x%016x" % int(data[2],16),color))
+                print("\033[36m{0}\033[0m│+{1}: \033[{3}m{2}\033[0m".format(data[0],"0x%04x" % int(data[1],10),"0x%014x" % int(data[2],16),color))
     elif(types == LayoutView.register_tag):
         if(color == LayoutView.color_format_value_pink or color == LayoutView.color_format_value_red):
             if step == "4":
                 print("\033[31m${0}\033[0m  : \033[{2}m{1}\033[0m  →  {3}".format("{:<3s}".format(data[0]),"0x%08x" % int(data[1],16),color,"0x%08x" % int(data[2],16)))
             elif step == "8":
-                print("\033[31m${0}\033[0m  : \033[{2}m{1}\033[0m  →  {3}".format("{:<3s}".format(data[0]),"0x%016x" % int(data[1],16),color,"0x%016x" % int(data[2],16)))
+                print("\033[31m${0}\033[0m  : \033[{2}m{1}\033[0m  →  {3}".format("{:<3s}".format(data[0]),"0x%014x" % int(data[1],16),color,"0x%014x" % int(data[2],16)))
         else:
             if step == "4":
                 print("\033[31m${0}\033[0m  : \033[{2}m{1}\033[0m".format("{:<3s}".format(data[0]),"0x%08x" % int(data[1],16),color))
             elif step == "8":
-                print("\033[31m${0}\033[0m  : \033[{2}m{1}\033[0m".format("{:<3s}".format(data[0]),"0x%016x" % int(data[1],16),color))
+                print("\033[31m${0}\033[0m  : \033[{2}m{1}\033[0m".format("{:<3s}".format(data[0]),"0x%014x" % int(data[1],16),color))
     else:
         return
