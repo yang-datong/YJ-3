@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/local/bin/python3.9
 # -*- coding: UTF-8 -*-
 from style.layout import *
 import frida,sys,re
@@ -133,7 +133,8 @@ while True:
         continue
     #==================== Shell command ====================
     if (cmd == "quit" or cmd == "q"):
-        break
+        #process.detach()
+        sys.exit(0)
     elif(cmd == "clear" or cmd == "cl"):
         os.system("clear")
     elif(cmd == "ls"):
