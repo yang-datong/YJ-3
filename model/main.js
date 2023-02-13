@@ -1,6 +1,7 @@
 // ------------------------- Main -------------------------------
 //java()
-//hook('libc++.so',0x00000)
+hook('libc.so','fread')
+//hook('libc.so','fwrite')
 //32bit app -> address + 1
 // ----------------------- Function -------------------------------
 function java() {
@@ -11,18 +12,9 @@ function java() {
 	});
 }
 
-function hook(so, addr) {
-	let lib = Module.findBaseAddress(so);
-	while (lib == null) {
-		lib = Module.findBaseAddress(so);
-	}
-
-	b(lib.add(addr), c => {
-//		send(c.sp)
-//		send(c.sp.readPointer())
+function hook(so,func) {
+	var addr = Module.getExportByName(so,func);
+	b(addr, c => {
 		ls(c);
-		globalContext = c
-	}, c => {
-		console.log("returnValue -> "+c.x0);
 	});
 }

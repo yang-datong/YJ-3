@@ -27,7 +27,6 @@ function hook(so, addr) {
 //		send(c.sp)
 //		send(c.sp.readPointer())
 		ls(c);
-		globalContext = c
 	}, c => {
 
 	});

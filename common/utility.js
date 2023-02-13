@@ -37,6 +37,7 @@ function b(...args) {
 			if (on_enter != undefined) {
 				on_enter(this.context);
 			}
+			globalContext = this.context;
 		}, onLeave(returnValue) {
 			if (on_leave != undefined) {
 				on_leave(this.context);
