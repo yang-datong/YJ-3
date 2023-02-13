@@ -57,23 +57,23 @@ main(){
 usage (){
 	echo "Usage :  $0 [options] [--]
 
-    Options:
-    -h|help       Display this message
-    -v|version    Display script version
+	Options:
+	-h|help       Display this message
+	-v|version    Display script version
 
-		Check parameters $0 [target_binary_path_so] [so name] [display row] [address offset]
+	Check parameters $0 [target_binary_path_so] [so name] [display row] [address offset]
 
-		Such as -> $0 /data/app/com.xx/lib/arm64/xx.so xx.so 5 f6978"
+	Such as -> $0 /data/app/com.xx/lib/arm64/xx.so xx.so 5 f6978"
 }
 
 #  Handle command line arguments
 while getopts ":hv" opt;do
-  case $opt in
-	h|help)			usage; exit 0   ;;
-	v|version)	echo "$0 -- Version $__ScriptVersion"; exit 0   ;;
-	* )					echo -e "\n  Option does not exist : $OPTARG\n"
-							usage; exit 1   ;;
-  esac
+	case $opt in
+		h|help)			usage; exit 0   ;;
+		v|version)	echo "$0 -- Version $__ScriptVersion"; exit 0   ;;
+		* )					echo -e "\n  Option does not exist : $OPTARG\n"
+			usage; exit 1   ;;
+	esac
 done
 shift $(($OPTIND-1))
 
