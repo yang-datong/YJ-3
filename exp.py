@@ -4,7 +4,7 @@ from commond.layout import *
 import frida,sys,re
 
 if (len(sys.argv) < 3):
-    print("\033[31mPlease input script\033[0m, such as ->\033[32m python3 exp.py script.js\033[0m")
+    print(RED("Please input script. ") + GREEN("such as -> python3 exp.py script.js"))
     exit(0)
 
 HOOK_TARGET_APP_NAME = sys.argv[1]
@@ -100,7 +100,11 @@ def read_String(argv):
     if len(argv) > 1:
         coding = argv[1]
     string = script.exports.read_string(address,coding)
-    print(string)
+    if string.find("Error") != -1:
+        print(RED(string))
+    else:
+        print(YELLOW("\"" + string + "\""))
+
 
 
 def show_all_view():
@@ -108,7 +112,7 @@ def show_all_view():
 
 def libc_base_address():
     address = script.exports.libc_base_address()
-    print("\033[34mlibc :\033[0m \033[37m%s\033[0m" % address)
+    print(BLUE("libc :") + WHITE(" %s") % address)
 
 def trace(argv):
     if argv is None:
@@ -132,7 +136,7 @@ def hexdump(argv):
 
 #========================= End =========================
 
-LOGO = "\n\033[31mYJ ➤ \033[0m"
+LOGO = RED("\nYJ ➤ ")
 
 while True:
     cmd = input(LOGO)

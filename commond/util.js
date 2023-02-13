@@ -208,10 +208,9 @@ function show_telescope_view(...args) {
 		}
 
 		try {
-			// TODO multiple pointer
-			// ptr = _addr.readPointer();
-			// ptr = _addr.readUtf8String();
-			ptr = 0;
+			//TODO
+			ptr = _addr.readPointer();
+			//ptr = _addr.readUtf8String();
 		} catch {
 			ptr = 0;
 		}
