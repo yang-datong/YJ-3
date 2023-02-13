@@ -163,6 +163,7 @@ function setBreakpoint(address,targetLibName) {
 
 	b(globalLib.add(address), c => {
 		globalContext = c
+		ls(c)
 	})
 }
 
