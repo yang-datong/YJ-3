@@ -304,8 +304,8 @@ def update_show_text_view_style(data, color, types, step="4"):
             print((CYAN("{0}") + "│+{1}: " + "\033[{3}m{2}\033[0m  →  {4}").format(
                 one, ADDRESS_JUMP_STEP_COUNT_FORMAT % int(two, 10), _format % int(three, 16), color, _format % int(four, 16)))
         elif (color == LayoutView.color_format_value_yellow):
-            print((CYAN("{0}") + "│+{1}: \033[{3}m\"{2}\"\033[0m").format(
-                one, ADDRESS_JUMP_STEP_COUNT_FORMAT % int(two, 10), three, color))
+            print((CYAN("{0}") + "│+{1}: \033[{3}m{2}\033[0m").format(
+                one, ADDRESS_JUMP_STEP_COUNT_FORMAT % int(two, 10), repr(three), color))
         else:
             print((CYAN("{0}") + "│+{1}: \033[{3}m{2}\033[0m").format(
                 one, ADDRESS_JUMP_STEP_COUNT_FORMAT % int(two, 10), _format % int(three, 16), color))
@@ -313,12 +313,12 @@ def update_show_text_view_style(data, color, types, step="4"):
         if (color == LayoutView.color_format_value_pink or
            color == LayoutView.color_format_value_red):
             print((RED("${0}") + "  : \033[{2}m{1}\033[0m  →  {3}").format(
-                "{:<3s}".format(one), _format % int(two, 16), color, _format % int(three, 16)))
+                "{:<4s}".format(one), _format % int(two, 16), color, _format % int(three, 16)))
         elif (color == LayoutView.color_format_value_yellow):
-            print(RED("${0}") + "  : \033[{2}m{1}\033[0m  →  \033[{2}m\"{3}\"\033[0m".format(
-                "{:<3s}".format(one), _format % int(two, 16), color, three))
+            print((RED("${0}") + "  : \033[{2}m{1}\033[0m  →  \033[{2}m{3}\033[0m").format(
+                "{:<4s}".format(one), _format % int(two, 16), color, repr(three)))
         else:
             print((RED("${0}") + "  : \033[{2}m{1}\033[0m").format(
-                "{:<3s}".format(one), _format % int(two, 16), color))
+                "{:<4s}".format(one), _format % int(two, 16), color))
     else:
         return
