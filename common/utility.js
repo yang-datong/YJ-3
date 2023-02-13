@@ -18,7 +18,6 @@ const tele = (...args) => {
 }
 
 const ls = (ctx) => {
-	globalContext = ctx;
 	show_view(ctx);
 }
 

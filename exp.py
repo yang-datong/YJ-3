@@ -4,13 +4,14 @@ from common.layout import *
 import frida
 import sys
 import re
-import argparse as arg
+import argparse
+import readline
 
 MAIN_SCRIPT_FILE = "model/main.js"
 LAYOUT_SCRIPT_FILE = "common/layout.js"
 UTILITY_SCRIPT_FILE = "common/utility.js"
 
-parser = arg.ArgumentParser()
+parser = argparse.ArgumentParser()
 parser.add_argument('-n', '--app-name', help='set target application')
 parser.add_argument('-s', '--script', default=MAIN_SCRIPT_FILE,
                     help='load custom script file')
@@ -81,6 +82,9 @@ Usage : [options] [value] [--]
     t|trace [accurate/fuzzy]    Display called function list(default fuzzy)
     p [pointer]                 Display pointer value
     x [pointer]                 Display pointer hexadecimal value
+    b|breakpoints               Add break pointer
+    i|info [b|breakpoints]      Print current all break pointer
+    d|delete [breakpoint]       Delete break pointer
     hd|hexdump [pointer]        Display target memory space
     tele|telescope [pointer]    Display multiple line memory space
     s|string [pointer]          Print target address character(default utf-8)
@@ -114,6 +118,23 @@ def set_breakpoint(argv):
     if len(argv) > 1:
         targetLibName = argv[1]
     script.exports.set_breakpoint(address, targetLibName)
+
+
+def display_breakpoints_info(argv):
+    show_type = argv[0]
+    if show_type == "b" or show_type == "breakpoints":
+        breakpoints = script.exports.get_breakpoints()
+        breakpoints = breakpoints.split()
+        print("{0:^5s} {1:^16s} {2:^16s} {3:^16s}".format(
+            "Num", "Type", "Address", "What"))
+        print("{0:^5s} {1:^16s} {2:^25s} {3:^25s}".format(
+            "1", "breakpoint", BLUE(breakpoints[0]), GREEN(breakpoints[1])))
+
+
+def delete_breakpoint(argv):
+    address = argv[0]
+    script.exports.delete_breakpoint(address)
+    print(GREEN("Cleaed all breakPointer"))
 
 
 def read_String(argv):
@@ -185,7 +206,7 @@ while True:
     elif (cmd == "clear" or cmd == "cl"):
         os.system("clear")
     elif (cmd == "ls"):
-        os.system(cmd)
+        os.system("ls --color")
     # -------------------- Frida command --------------------
     elif (cmd == "main" or cmd == "m"):
         show_all_view()
@@ -197,8 +218,15 @@ while True:
         print_address(argv, 10)
     elif (cmd == "x" and (not argv is None)):
         print_address(argv, 16)
-    elif (cmd == "b" and (not argv is None)):
+    elif ((cmd == "b" or cmd == "breakpoints")
+          and (not argv is None)):
         set_breakpoint(argv)
+    elif ((cmd == "i" or cmd == "info")
+          and (not argv is None)):
+        display_breakpoints_info(argv)
+    elif ((cmd == "d" or cmd == "delete")
+          and (not argv is None)):
+        delete_breakpoint(argv)
     elif ((cmd == "hexdump" or cmd == "hd") and (not argv is None)):
         hexdump(argv)
     elif ((cmd == "telescope" or cmd == "tele") and (not argv is None)):

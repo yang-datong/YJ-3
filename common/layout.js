@@ -71,6 +71,19 @@ rpc.exports.setBreakpoint = (address,targetLibName) => {
 	setBreakpoint(address,targetLibName)
 }
 
+rpc.exports.getBreakpoints = () => {
+	return globalBreakpoint + " " + globalLibName
+}
+
+rpc.exports.deleteBreakpoint = address => {
+	Interceptor.detachAll()
+	globalLib = undefined
+	globalContext = undefined
+	globalLibName = undefined
+	globalBreakpoint = undefined
+//	Interceptor.revert(new NativePointer("0x" + (Number.parseInt(address) + Number.parseInt(globalLib.base)).toString(16)));
+}
+
 rpc.exports.readString = function (address, coding) {
 	let string_;
 	try {
@@ -109,7 +122,7 @@ rpc.exports.readString = function (address, coding) {
 const message_tag = ' log ';
 const _width = 70;
 let step , arch ,libc_base_address;
-let globalContext ,globalLibName , globalLib;
+let globalContext ,globalLibName , globalLib, globalBreakpoint;
 
 // ------------------------- Initialization -------------------------
 // 向python块发送所需块数据
@@ -156,13 +169,17 @@ function setBreakpoint(address,targetLibName) {
 			return;
 		}
 	}
+	if (globalBreakpoint != undefined && address == globalBreakpoint) {
+		console.log("Don't duplicate addtion -> " + globalBreakpoint);
+		return;
+	}
 
-	globalLibName = targetLibName;
-	globalLib = targetLib;
+	globalLibName = targetLibName; //lib.so name
+	globalLib = targetLib; //lib.so base address
+	globalBreakpoint = address; //address offset
 	console.log("SetBreakpoint -> {lib:"+globalLibName +",address:"+globalLib + "}");
 
 	b(globalLib.add(address), c => {
-		globalContext = c
 		ls(c)
 	})
 }
@@ -278,6 +295,10 @@ function show_code_view(ctx) {
 
 	const data = JSON.stringify(object) + CODE_TAG;
 	libc_base_address = base;
+	globalLib = lib;
+	globalBreakpoint = "0x" + offset.toString(16);
+	globalLibName = name;
+	globalContext = ctx;
 	send([data, VIEW_CODE + arch]); // 标记为送往code段的数据
 }
 

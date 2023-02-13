@@ -235,7 +235,7 @@ def get_config_info():
 
 def dump_target_binary(path, lib_name, row, offset):
     result = os.popen("./common/get_target_binary.sh " +
-                      path +" "+ lib_name + " "+ row + " " + offset)
+                      path + " " + lib_name + " " + row + " " + offset)
     return result.readlines()
 
 
@@ -287,6 +287,8 @@ BIT_32_COUNT_FORMAT = "0x%08x"
 BIT_64_COUNT_FORMAT = "0x%014x"
 
 # 改变文字的颜色
+
+
 def update_show_text_view_style(data, color, types, step="4"):
     _format = BIT_64_COUNT_FORMAT
     if step == "4":
