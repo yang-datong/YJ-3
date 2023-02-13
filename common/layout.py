@@ -234,7 +234,7 @@ def get_config_info():
 
 
 def dump_target_binary(path, lib_name, row, offset):
-    result = os.popen("./commond/get_target_binary.sh " +
+    result = os.popen("./common/get_target_binary.sh " +
                       path +" "+ lib_name + " "+ row + " " + offset)
     return result.readlines()
 

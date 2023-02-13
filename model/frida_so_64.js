@@ -9,7 +9,6 @@ hook('libttmplayer.so',0xF6978) //x1 +8 寄存器有字符串
 // hooks("libttmplayer.so",0x145384)
 // -------------------------func-------------------------------
 function java() {
-	send('1');
 	Java.perform(() => {
 		Java.use('com.ss.ttm.player.TTPlayer').setVideoSurface.overload('android.view.Surface').implementation = function (v1) {
 			send(String(this.mHandle.value));
@@ -27,7 +26,7 @@ function hook(so, addr) {
 	b(lib.add(addr), c => {
 //		send(c.sp)
 //		send(c.sp.readPointer())
-//		ls(c);
+		ls(c);
 		globalContext = c
 	}, c => {
 

@@ -67,6 +67,10 @@ rpc.exports.showAllView = address => {
 	}
 };
 
+rpc.exports.setBreakpoint = (address,targetLibName) => {
+	setBreakpoint(address,targetLibName)
+}
+
 rpc.exports.readString = function (address, coding) {
 	let string_;
 	try {
@@ -104,10 +108,8 @@ rpc.exports.readString = function (address, coding) {
 // --------------------- Initialized variables ----------------------
 const message_tag = ' log ';
 const _width = 70;
-let step;
-let arch;
-let globalContext;
-let libc_base_address;
+let step , arch ,libc_base_address;
+let globalContext ,globalLibName , globalLib;
 
 // ------------------------- Initialization -------------------------
 // 向python块发送所需块数据
@@ -131,6 +133,40 @@ function init_segment_address(context) {
 			*/
 // findAll("初始化之前",lib)
 // setTimeout((v0,v1) => {findAll(v0,v1)},1700,"初始化之后",lib)
+
+function setBreakpoint(address,targetLibName) {
+	let targetLib;
+	if (targetLibName == undefined || targetLibName === "") {
+		targetLibName = globalLibName
+	}
+	if (targetLibName == undefined) {
+		console.log("Currentil not found available target dynamic lib. Exec -> b [address] [targetLibName]");
+		return;
+	}
+	if (targetLibName != globalLibName) {
+		targetLib = Module.findBaseAddress(targetLibName);
+		if (targetLib == null) {
+			console.log("Don't find " + targetLibName);
+			return;
+		}
+	}else if(globalLib == undefined || globalLib == null){
+		targetLib = Module.findBaseAddress(targetLibName);
+		if (targetLib == null) {
+			console.log("Don't find " + targetLibName);
+			return;
+		}
+	}
+
+	globalLibName = targetLibName;
+	globalLib = targetLib;
+	console.log("SetBreakpoint -> {lib:"+globalLibName +",address:"+globalLib + "}");
+
+	b(globalLib.add(address), c => {
+		globalContext = c
+	})
+}
+
+
 
 // ------------------------------ View ------------------------------
 // 显示一个指针块视图

@@ -1,21 +1,26 @@
 #!/usr/local/bin/python3.9
 # -*- coding: UTF-8 -*-
-from commond.layout import *
+from common.layout import *
 import frida
 import sys
 import re
+import argparse as arg
 
-if (len(sys.argv) < 3):
-    print(RED("Please input script. ") +
-          GREEN("such as -> python3 exp.py script.js"))
-    exit(0)
+MAIN_SCRIPT_FILE = "model/main.js"
+LAYOUT_SCRIPT_FILE = "common/layout.js"
+UTILITY_SCRIPT_FILE = "common/utility.js"
 
-HOOK_TARGET_APP_NAME = sys.argv[1]
-MAIN_SCRIPT_FILE = sys.argv[2]
-LAYOUT_SCRIPT_FILE = "./commond/layout.js"
-UTILITY_SCRIPT_FILE = "./commond/utility.js"
+parser = arg.ArgumentParser()
+parser.add_argument('-n', '--app-name', help='set target application')
+parser.add_argument('-s', '--script', default=MAIN_SCRIPT_FILE,
+                    help='load custom script file')
 
-layout = LayoutView()  # Init Sytle Theme
+args = parser.parse_args()
+MAIN_SCRIPT_FILE = args.script
+HOOK_TARGET_APP_NAME = args.app_name
+
+# -------------------------- Main --------------------------
+layout = LayoutView()  # Initialization style theme
 
 
 def on_message(message, data):
@@ -60,7 +65,6 @@ script.load()
 show_head_view_tips_info_color()
 script.exports.init(LayoutView.mjson)  # 对应js脚本的hook函数init()
 # device.resume(pid)  #对应挂起函数调用
-# sys.stdin.read()
 
 chose = '''
 Usage : [options] [value] [--]
@@ -73,6 +77,7 @@ Usage : [options] [value] [--]
     ls                          Display current list
     m|main                      Display all view
     lib                         Print current target dynamic library base address
+    b [address] [targetLibName] Set target lib and break point
     t|trace [accurate/fuzzy]    Display called function list(default fuzzy)
     p [pointer]                 Display pointer value
     x [pointer]                 Display pointer hexadecimal value
@@ -101,6 +106,14 @@ def print_address(argv, carry=10):
         print(address + " -> " + value)
     else:
         print(str(int(value, 16)))
+
+
+def set_breakpoint(argv):
+    address = argv[0]
+    targetLibName = None
+    if len(argv) > 1:
+        targetLibName = argv[1]
+    script.exports.set_breakpoint(address, targetLibName)
 
 
 def read_String(argv):
@@ -184,6 +197,8 @@ while True:
         print_address(argv, 10)
     elif (cmd == "x" and (not argv is None)):
         print_address(argv, 16)
+    elif (cmd == "b" and (not argv is None)):
+        set_breakpoint(argv)
     elif ((cmd == "hexdump" or cmd == "hd") and (not argv is None)):
         hexdump(argv)
     elif ((cmd == "telescope" or cmd == "tele") and (not argv is None)):
