@@ -20,6 +20,10 @@ args = parser.parse_args()
 MAIN_SCRIPT_FILE = args.script
 HOOK_TARGET_APP_NAME = args.app_name
 
+if HOOK_TARGET_APP_NAME is None:
+    print("Try exec -> \"python3 " + sys.argv[0] + " -h\"")
+    exit(0)
+
 # -------------------------- Main --------------------------
 layout = LayoutView()  # Initialization style theme
 
