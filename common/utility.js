@@ -47,6 +47,31 @@ function b(...args) {
 }
 
 // ------------------------- Function -------------------------------
+rpc.exports.showAllso = (user, output) => showAllso(user, output);
+
+function showAllso(user, output) {
+	let list_name = '';
+	Process.enumerateModules({
+		onMatch(so) {
+			const path = so.path;
+			if (user) {
+				if (path.includes('/data/app/')) {
+					list_name += so.name + ' ';
+				}
+			} else {
+				list_name += so.name + ' ';
+			}
+		}, onComplete() {
+			if (output == undefined || output == true) {
+			  console.log('{' + list_name + '}');
+			}
+		},
+	});
+	return list_name;
+}
+
+//TODO 添加watch命令 配合 info so 来试探内存
+
 // 监控内存数据
 function watch(addr, length, lib) {
 	MemoryAccessMonitor.enable({base: addr, size: length}, {
@@ -62,21 +87,8 @@ function watch(addr, length, lib) {
 		}});
 }
 
-// 所有加载的so
-function findAll(string_, lib) {
-	for (const i in lib) {
-		send(string_ + lib[i] + '-> ' + Module.findBaseAddress(lib[i]));
-	}
-}
-
-// So层栈回溯
-function printStack_so(ctx) {
-	send('So Stack -> :\n' + Thread.backtrace(ctx, Backtracer.ACCURATE).map(DebugSymbol.fromAddress).join('\n') + '\n');
-	// Log('So Stack -> :\n' +Thread.backtrace(this.context, Backtracer.ACCURATE).map(DebugSymbol.fromAddress).join('\n') + '\n');
-}
-
 // Android层栈回溯
-function printStack() {
+function jbacktracer() {
 	send('Java Stack -> :\n' + Java.use('android.util.Log').getStackTraceString(Java.use('java.lang.Throwable').$new()));
 }
 

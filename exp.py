@@ -142,7 +142,7 @@ def set_breakpoint(string):
     script.exports.set_breakpoint(info[1], info[0])
 
 
-def display_breakpoints_info(argv):
+def display_info_list_type(argv):
     show_type = argv[0]
     if show_type == "b" or show_type == "breakpoints":
         breakpoints = script.exports.get_breakpoints()
@@ -151,6 +151,14 @@ def display_breakpoints_info(argv):
             "Num", "Type", "Address", "What"))
         print("{0:^5s} {1:^16s} {2:^25s} {3:^25s}".format(
             "1", "breakpoint", BLUE(breakpoints[0]), GREEN(breakpoints[1])))
+    if show_type == "so":
+        string = script.exports.show_allso(True,False) #Parameter : whether just display user lib library
+        list_name = sorted(string.split())
+        for i in range(len(list_name)):
+            if i % 3 != 0:
+                print(f"{GREEN(list_name[i]):<30s}",end=" | ")
+            else:
+                print(f"{GREEN(list_name[i]):<30s}")
 
 
 def delete_breakpoint(argv):
@@ -252,7 +260,7 @@ while True:
         set_breakpoint(argv[0])
     elif ((cmd == "i" or cmd == "info")
           and (not argv is None)):
-        display_breakpoints_info(argv)
+        display_info_list_type(argv)
     elif ((cmd == "d" or cmd == "delete")
           and (not argv is None)):
         delete_breakpoint(argv)
