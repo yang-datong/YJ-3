@@ -149,6 +149,12 @@ function init_segment_address(context) {
 
 function setBreakpoint(address,targetLibName) {
 	let targetLib;
+
+	if (globalBreakpoint != undefined && address == globalBreakpoint) {
+		console.log("Don't duplicate addtion -> " + globalBreakpoint);
+		return;
+	}
+
 	if (targetLibName == undefined || targetLibName === "") {
 		targetLibName = globalLibName
 	}
@@ -158,28 +164,20 @@ function setBreakpoint(address,targetLibName) {
 	}
 	if (targetLibName != globalLibName) {
 		targetLib = Module.findBaseAddress(targetLibName);
+		//targetLib = Process.getModuleByName(targetLibName);
 		if (targetLib == null) {
 			console.log("Don't find " + targetLibName);
 			return;
 		}
-	}else if(globalLib == undefined || globalLib == null){
-		targetLib = Module.findBaseAddress(targetLibName);
-		if (targetLib == null) {
-			console.log("Don't find " + targetLibName);
-			return;
-		}
-	}
-	if (globalBreakpoint != undefined && address == globalBreakpoint) {
-		console.log("Don't duplicate addtion -> " + globalBreakpoint);
-		return;
+		globalLib = targetLib; //lib.so base address
+		globalLibName = targetLibName; //lib.so name
 	}
 
-	globalLibName = targetLibName; //lib.so name
-	globalLib = targetLib; //lib.so base address
 	globalBreakpoint = address; //address offset
-	console.log("SetBreakpoint -> {lib:"+globalLibName +",address:"+globalLib + "}");
+	console.log("SetBreakpoint -> {lib:"+globalLibName +",address:"+ globalBreakpoint + "}");
 
-	b(globalLib.add(address), c => {
+	Interceptor.detachAll(); //现在支持单个断点 hook 以后会考虑 TODO
+	b(globalLib.add(globalBreakpoint), c => {
 		ls(c)
 	})
 }
@@ -294,11 +292,11 @@ function show_code_view(ctx) {
 		offset};
 
 	const data = JSON.stringify(object) + CODE_TAG;
-	libc_base_address = base;
-	globalLib = lib;
-	globalBreakpoint = "0x" + offset.toString(16);
-	globalLibName = name;
-	globalContext = ctx;
+//	libc_base_address = base;
+//	globalLib = base;
+//	globalBreakpoint = "0x" + offset.toString(16);
+//	globalLibName = name;
+//	globalContext = ctx;
 	send([data, VIEW_CODE + arch]); // 标记为送往code段的数据
 }
 

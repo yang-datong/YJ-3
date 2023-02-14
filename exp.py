@@ -137,9 +137,19 @@ def print_address(argv, carry=10):
         print(str(int(value, 16)))
 
 
-def set_breakpoint(string):
-    info = format_breakpoint(string)
-    script.exports.set_breakpoint(info[1], info[0])
+def set_breakpoint(argv):
+    address = argv[0]
+    if len(argv) > 1:
+        targetLibName = argv[1]
+        script.exports.set_breakpoint(address, targetLibName)
+    else:
+        script.exports.set_breakpoint(address)
+#def set_breakpoint(string):
+#    info = format_breakpoint(string)
+#    script.exports.set_breakpoint(info[1], info[0])
+
+def watch_memory(argv):
+    targetLibName = argv
 
 
 def display_info_list_type(argv):
@@ -215,7 +225,8 @@ def hexdump(argv):
 # ------------------------ Interaction Model ------------------------
 # Whether need to set pre-breakpoint
 if not args.breakpoint is None:
-    set_breakpoint(args.breakpoint)
+    info = format_breakpoint(args.breakpoint)
+    script.exports.set_breakpoint(info[1], info[0])
 
 
 LOGO = RED("\nYJ ➤ ")
@@ -257,7 +268,10 @@ while True:
         print_address(argv, 16)
     elif ((cmd == "b" or cmd == "breakpoints")
           and (not argv is None)):
-        set_breakpoint(argv[0])
+        set_breakpoint(argv)
+    elif ((cmd == "w" or cmd == "watch")
+          and (not argv is None)):
+        watch_memory(argv)
     elif ((cmd == "i" or cmd == "info")
           and (not argv is None)):
         display_info_list_type(argv)
