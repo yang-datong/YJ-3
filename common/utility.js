@@ -10,16 +10,17 @@ const dump = (...ptr) => {
 	if (ptr[1] == undefined) {
 		ptr[1] = 0x30;
 	}
+
 	return send(hexdump(ptr[0], {offset: 0, length: ptr[1], header: true, ansi: true}));
 };
 
 const tele = (...args) => {
 	show_telescope_view(...args);
-}
+};
 
-const ls = (ctx) => {
+const ls = ctx => {
 	show_view(ctx);
-}
+};
 
 // 用于Interceptor.attach的封装
 function b(...args) {
@@ -27,6 +28,13 @@ function b(...args) {
 	const on_enter = args[1];
 	const on_leave = args[2];
 	const is_clear = args[3];
+
+	// 初始化lib信息，存入全局变量中
+	const lib = Process.getModuleByAddress(addr);
+	globalLibBase = lib.base;
+	globalBreakpoint = '0x' + (addr - Number.parseInt(lib.base)).toString(16);
+	globalLibName = lib.name;
+	globalLibPath = lib.path;
 
 	Interceptor.attach(addr, {
 		onEnter(args) {
@@ -37,6 +45,7 @@ function b(...args) {
 			if (on_enter != undefined) {
 				on_enter(this.context);
 			}
+
 			globalContext = this.context;
 		}, onLeave(returnValue) {
 			if (on_leave != undefined) {
@@ -56,29 +65,34 @@ function showAllso(user, output) {
 			const path = so.path;
 			if (user) {
 				if (path.includes('/data/app/')) {
-					list_name += so.name + ' ';
+					list_name += output == undefined || output == true ? so.path + ' ' : so.name + ' ';
 				}
+			} else if (output == undefined || output == true) {
+				list_name += so.path + ' ';
 			} else {
 				list_name += so.name + ' ';
 			}
-		}, onComplete() {
-			if (output == undefined || output == true) {
-			  console.log('{' + list_name + '}');
-			}
-		},
+		}, onComplete() {},
 	});
 	return list_name;
 }
 
-//TODO 添加watch命令 配合 info so 来试探内存
+// TODO 添加watch命令 配合 info so 来试探内存
+rpc.exports.watchMemory = (addr, length) => {
+	if (length == null) {
+		console.log('len == null');
+	}
+
+	watch(new NativePointer(addr), length);
+};
 
 // 监控内存数据
-function watch(addr, length, lib) {
-	MemoryAccessMonitor.enable({base: addr, size: length}, {
+function watch(pointer, length) {
+	MemoryAccessMonitor.enable({base: pointer, size: length}, {
 		onAccess(details) {
 			send('operation->' + details.operation
 				+ '\nfrom->' + details.from
-				+ '\naddress->' + (details.address)
+				+ '\naddress->' + details.address
 				+ '\nrangeIndex->' + details.rangeIndex
 				+ '\npageIndex->' + details.pageIndex
 				+ '\npagesCompleted->' + details.pagesCompleted

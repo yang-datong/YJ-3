@@ -5,4 +5,4 @@ adb shell am start com.ss.android.ugc.aweme/.splash.SplashActivity
 
 sleep 1
 
-./exp.py 抖音
+./exp.py -l ./model/frida_so_64.js 抖音

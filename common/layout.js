@@ -34,7 +34,7 @@ rpc.exports.init = mjson => {
 };
 
 // ------------------- Used to provide python call ------------------
-rpc.exports.libcBaseAddress = () => libc_base_address;
+rpc.exports.libcBaseAddress = () => globalLib;
 
 rpc.exports.readPointer = address => new NativePointer(address).readPointer();
 
@@ -67,22 +67,21 @@ rpc.exports.showAllView = address => {
 	}
 };
 
-rpc.exports.setBreakpoint = (address,targetLibName) => {
-	setBreakpoint(address,targetLibName)
-}
+rpc.exports.setBreakpoint = (address, targetLibName) => {
+	setBreakpoint(address, targetLibName);
+};
 
-rpc.exports.getBreakpoints = () => {
-	return globalBreakpoint + " " + globalLibName
-}
+rpc.exports.getBreakpoints = () => globalBreakpoint + ' ' + globalLibName;
 
 rpc.exports.deleteBreakpoint = address => {
-	Interceptor.detachAll()
-	globalLib = undefined
-	globalContext = undefined
-	globalLibName = undefined
-	globalBreakpoint = undefined
-//	Interceptor.revert(new NativePointer("0x" + (Number.parseInt(address) + Number.parseInt(globalLib.base)).toString(16)));
-}
+	Interceptor.detachAll();
+	globalLibBase = undefined;
+	globalContext = undefined;
+	globalLibName = undefined;
+	globalBreakpoint = undefined;
+	globalLibPath = undefined;
+//	Interceptor.revert(new NativePointer("0x" + (Number.parseInt(address) + Number.parseInt(globalLibBase.base)).toString(16)));
+};
 
 rpc.exports.readString = function (address, coding) {
 	let string_;
@@ -121,8 +120,8 @@ rpc.exports.readString = function (address, coding) {
 // --------------------- Initialized variables ----------------------
 const message_tag = ' log ';
 const _width = 70;
-let step , arch ,libc_base_address;
-let globalContext ,globalLibName , globalLib, globalBreakpoint;
+let step; let arch;
+var globalContext, globalLibName, globalLibBase, globalBreakpoint, globalLibPath;
 
 // ------------------------- Initialization -------------------------
 // 向python块发送所需块数据
@@ -135,54 +134,42 @@ function init_segment_address(context) {
 	send(data);
 }
 
-/**
-		Send("id->"+Process.id +
-			"\narch->"+Process.arch +
-			"\nplatform->"+Process.platform +
-			"\npageSize->"+Process.pageSize +
-			"\nisDebuggerAttached->"+Process.isDebuggerAttached()+
-			"\ngetCurrentThreadId->"+Process.getCurrentThreadId()+
-			"\npointerSize->"+Process.pointerSize )
-			*/
-// findAll("初始化之前",lib)
-// setTimeout((v0,v1) => {findAll(v0,v1)},1700,"初始化之后",lib)
-
-function setBreakpoint(address,targetLibName) {
-	let targetLib;
-
-	if (globalBreakpoint != undefined && address == globalBreakpoint) {
-		console.log("Don't duplicate addtion -> " + globalBreakpoint);
+function setBreakpoint(address, targetLibName) {
+	let targetLibBase;
+	// Console.log("address->"+address+",targetLibName->"+targetLibName);
+	// console.log("globalBreakpoint->"+globalBreakpoint+",globalLibName->"+globalLibName);
+	if (globalBreakpoint != undefined && address.toLowerCase() == globalBreakpoint.toLowerCase()) {
+		console.log('Don\'t duplicate addtion -> ' + globalBreakpoint);
 		return;
 	}
 
-	if (targetLibName == undefined || targetLibName === "") {
-		targetLibName = globalLibName
+	if (targetLibName == undefined || targetLibName === '') {
+		targetLibName = globalLibName;
 	}
+
 	if (targetLibName == undefined) {
-		console.log("Currentil not found available target dynamic lib. Exec -> b [address] [targetLibName]");
+		console.log('Currentil not found available target dynamic lib. Exec -> b [address] [targetLibName]');
 		return;
 	}
+
 	if (targetLibName != globalLibName) {
-		targetLib = Module.findBaseAddress(targetLibName);
-		//targetLib = Process.getModuleByName(targetLibName);
-		if (targetLib == null) {
-			console.log("Don't find " + targetLibName);
+		targetLibBase = Module.findBaseAddress(targetLibName);
+		if (targetLibBase == null) {
+			console.log('Don\'t find ' + targetLibName);
 			return;
 		}
-		globalLib = targetLib; //lib.so base address
-		globalLibName = targetLibName; //lib.so name
 	}
 
-	globalBreakpoint = address; //address offset
-	console.log("SetBreakpoint -> {lib:"+globalLibName +",address:"+ globalBreakpoint + "}");
+	console.log('SetBreakpoint -> {lib:' + globalLibName + ',address:' + globalBreakpoint + '}');
 
-	Interceptor.detachAll(); //现在支持单个断点 hook 以后会考虑 TODO
-	b(globalLib.add(globalBreakpoint), c => {
-		ls(c)
-	})
+	// Console.log("address->"+address+",targetLibName->"+targetLibName);
+	// console.log("globalBreakpoint->"+globalBreakpoint+",globalLibName->"+globalLibName);
+
+	Interceptor.detachAll(); // 现在支持单个断点 hook 以后会考虑 TODO
+	b(globalLibBase.add(address), c => {
+		ls(c);
+	});
 }
-
-
 
 // ------------------------------ View ------------------------------
 // 显示一个指针块视图
@@ -206,7 +193,7 @@ function show_telescope_view(...args) {
 
 		// 第二级指针
 		try {
-			// TODO
+			// TODO 多级指针
 			ptr = _addr.readPointer();
 			// Ptr = _addr.readUtf8String();
 		} catch {
@@ -225,11 +212,11 @@ function show_telescope_view(...args) {
 }
 
 // 寄存器视图
-const maxSkipCount = 3;
-const skipCount = maxSkipCount;
-const skipCache = '';
-const REGISTER_FAZY_ZERO_VALUE_FILTERING_MODE = false;
-const REGISTER_CHECK_IS_LR_MODE = true;
+// const maxSkipCount = 3;
+// const skipCount = maxSkipCount;
+// const skipCache = '';
+// const REGISTER_FAZY_ZERO_VALUE_FILTERING_MODE = false;
+// const REGISTER_CHECK_IS_LR_MODE = true;
 
 function show_registers(...args) {
 	const context = args[0];
@@ -274,29 +261,11 @@ function show_trace_view(ctx, model) {
 }
 
 function show_code_view(ctx) {
-//	Send("id->"+Process.id +
-//			"\narch->"+Process.arch +
-//			"\nplatform->"+Process.platform +
-//			"\npageSize->"+Process.pageSize +
-//			"\nisDebuggerAttached->"+Process.isDebuggerAttached()+
-//			"\ngetCurrentThreadId->"+Process.getCurrentThreadId()+
-//			"\npointerSize->"+Process.pointerSize )
-	const lib = Process.getModuleByAddress(ctx.pc);
-	const name = lib.name;
-	const base = lib.base;
-	const path = lib.path;
-	const offset = ctx.pc - Number.parseInt(base);
-	const object = {name,
-		base,
-		path,
-		offset};
-
+	const offset = Number.parseInt(globalBreakpoint);
+	const path = globalLibPath;
+	const name = globalLibName;
+	const object = {name, offset, path};
 	const data = JSON.stringify(object) + CODE_TAG;
-//	libc_base_address = base;
-//	globalLib = base;
-//	globalBreakpoint = "0x" + offset.toString(16);
-//	globalLibName = name;
-//	globalContext = ctx;
 	send([data, VIEW_CODE + arch]); // 标记为送往code段的数据
 }
 

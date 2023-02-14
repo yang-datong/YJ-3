@@ -149,7 +149,12 @@ def set_breakpoint(argv):
 #    script.exports.set_breakpoint(info[1], info[0])
 
 def watch_memory(argv):
-    targetLibName = argv
+    address = argv[0]
+    length = None
+    lib = None
+    if len(argv) == 2:
+        length = argv[1]
+    script.exports.watch_memory(address,length)
 
 
 def display_info_list_type(argv):
@@ -162,7 +167,9 @@ def display_info_list_type(argv):
         print("{0:^5s} {1:^16s} {2:^25s} {3:^25s}".format(
             "1", "breakpoint", BLUE(breakpoints[0]), GREEN(breakpoints[1])))
     if show_type == "so":
-        string = script.exports.show_allso(True,False) #Parameter : whether just display user lib library
+        string = script.exports.show_allso(True,False)
+        #Parameter 1 : whether just display user lib library
+        #Parameter 2 : whether print detail info
         list_name = sorted(string.split())
         for i in range(len(list_name)):
             if i % 3 != 0:
