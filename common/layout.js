@@ -136,8 +136,8 @@ function init_segment_address(context) {
 
 function setBreakpoint(address, targetLibName) {
 	let targetLibBase;
-	// Console.log("address->"+address+",targetLibName->"+targetLibName);
-	// console.log("globalBreakpoint->"+globalBreakpoint+",globalLibName->"+globalLibName);
+	console.log("address->"+address+",targetLibName->"+targetLibName);
+	console.log("globalBreakpoint->"+globalBreakpoint+",globalLibName->"+globalLibName);
 	if (globalBreakpoint != undefined && address.toLowerCase() == globalBreakpoint.toLowerCase()) {
 		console.log('Don\'t duplicate addtion -> ' + globalBreakpoint);
 		return;
@@ -158,12 +158,13 @@ function setBreakpoint(address, targetLibName) {
 			console.log('Don\'t find ' + targetLibName);
 			return;
 		}
+		globalLibBase = targetLibBase;
 	}
 
 	console.log('SetBreakpoint -> {lib:' + globalLibName + ',address:' + globalBreakpoint + '}');
 
-	// Console.log("address->"+address+",targetLibName->"+targetLibName);
-	// console.log("globalBreakpoint->"+globalBreakpoint+",globalLibName->"+globalLibName);
+	console.log("address->"+address+",targetLibName->"+targetLibName);
+	console.log("globalBreakpoint->"+globalBreakpoint+",globalLibName->"+globalLibName);
 
 	Interceptor.detachAll(); // 现在支持单个断点 hook 以后会考虑 TODO
 	b(globalLibBase.add(address), c => {

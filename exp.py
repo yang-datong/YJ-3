@@ -139,6 +139,8 @@ def print_address(argv, carry=10):
 
 def set_breakpoint(argv):
     address = argv[0]
+    if (not re.match(RE_MATH_EVAL, address) is None):
+        address = str(hex(eval(address)))
     if len(argv) > 1:
         targetLibName = argv[1]
         script.exports.set_breakpoint(address, targetLibName)
@@ -174,11 +176,12 @@ def display_info_list_type(argv):
         string = script.exports.show_allso(True,False)
         #Parameter 1 : whether just display user lib library
         #Parameter 2 : whether print detail info
-        list_name = sorted(string.split())
+        list_name = sorted(string.split(','))
+        #list_name = string.split(',')
         for i in range(len(list_name)):
-            if i % 3 != 0:
-                print(f"{GREEN(list_name[i]):<30s}",end=" | ")
-            else:
+            #if i % 2 != 0:
+            #    print(f"{GREEN(list_name[i]):<30s}",end=" | ")
+            #else:
                 print(f"{GREEN(list_name[i]):<30s}")
 
 

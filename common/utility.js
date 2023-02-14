@@ -65,12 +65,12 @@ function showAllso(user, output) {
 			const path = so.path;
 			if (user) {
 				if (path.includes('/data/app/')) {
-					list_name += output == undefined || output == true ? so.path + ' ' : so.name + '[' + so.size + ']' + ' ';
+					list_name += output == undefined || output == true ? so.path + ',' :   so.name + ' -> {size : 0x' + so.size.toString(16) + '. base : 0x' + so.base.toString(16) +'}'  + ',';
 				}
 			} else if (output == undefined || output == true) {
-				list_name += so.path + ' ';
+				list_name += so.path + ',';
 			} else {
-				list_name += so.name + '[' + so.size + ']'  + ' ';
+				list_name += so.name + ' -> {size : 0x' + so.size.toString(16) + '. base : 0x' + so.base.toString(16) +'}'  + ',';
 			}
 		}, onComplete() {},
 	});
