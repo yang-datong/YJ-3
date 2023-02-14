@@ -34,7 +34,7 @@ rpc.exports.init = mjson => {
 };
 
 // ------------------- Used to provide python call ------------------
-rpc.exports.libcBaseAddress = () => globalLib;
+rpc.exports.libcBaseAddress = () => globalLibBase;
 
 rpc.exports.readPointer = address => new NativePointer(address).readPointer();
 

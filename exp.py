@@ -149,12 +149,16 @@ def set_breakpoint(argv):
 #    script.exports.set_breakpoint(info[1], info[0])
 
 def watch_memory(argv):
-    address = argv[0]
+    targetLibName = argv[0]
     length = None
     lib = None
     if len(argv) == 2:
         length = argv[1]
-    script.exports.watch_memory(address,length)
+    script.exports.watch_memory(targetLibName,length)
+
+def un_watch_memory():
+    script.exports.un_watch_memory()
+
 
 
 def display_info_list_type(argv):
@@ -279,6 +283,8 @@ while True:
     elif ((cmd == "w" or cmd == "watch")
           and (not argv is None)):
         watch_memory(argv)
+    elif (cmd == "uw" or cmd == "unwatch"):
+        un_watch_memory()
     elif ((cmd == "i" or cmd == "info")
           and (not argv is None)):
         display_info_list_type(argv)

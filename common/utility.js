@@ -65,29 +65,44 @@ function showAllso(user, output) {
 			const path = so.path;
 			if (user) {
 				if (path.includes('/data/app/')) {
-					list_name += output == undefined || output == true ? so.path + ' ' : so.name + ' ';
+					list_name += output == undefined || output == true ? so.path + ' ' : so.name + '[' + so.size + ']' + ' ';
 				}
 			} else if (output == undefined || output == true) {
 				list_name += so.path + ' ';
 			} else {
-				list_name += so.name + ' ';
+				list_name += so.name + '[' + so.size + ']'  + ' ';
 			}
 		}, onComplete() {},
 	});
 	return list_name;
 }
 
-// TODO 添加watch命令 配合 info so 来试探内存
-rpc.exports.watchMemory = (addr, length) => {
-	if (length == null) {
-		console.log('len == null');
-	}
 
-	watch(new NativePointer(addr), length);
+let globalWatchLibName,globalWatchLibRange;
+
+rpc.exports.watchMemory = (watchLibName,length) => {
+	try{
+		let lib = Process.getModuleByName(watchLibName)
+		if (length == null) {
+			length = lib.size
+		}else{
+			length = Number.parseInt(length)
+		}
+		let baseAddressPointer = lib.base;
+		console.log("Watch memory size -> 0x"+length.toString(16));
+		watchMemory(baseAddressPointer, length);
+		globalWatchLibName = watchLibName;
+		globalWatchLibRange = "{" + baseAddressPointer + "-" + baseAddressPointer.add(length) + "}"
+		console.log(globalWatchLibName);
+		console.log(globalWatchLibRange);
+	}catch(e){
+		unWatch();
+		console.log(e + "Try \"info so\"");
+	}
 };
 
 // 监控内存数据
-function watch(pointer, length) {
+function watchMemory(pointer, length) {
 	MemoryAccessMonitor.enable({base: pointer, size: length}, {
 		onAccess(details) {
 			send('operation->' + details.operation
@@ -98,8 +113,22 @@ function watch(pointer, length) {
 				+ '\npagesCompleted->' + details.pagesCompleted
 				+ '\npagesTotal->' + details.pagesTotal,
 			);
-		}});
+	}});
 }
+
+rpc.exports.unWatchMemory = () => {
+	unWatchMemory();
+}
+
+function unWatchMemory() {
+	if (globalWatchLibName != null && globalWatchLibRange != null ) {
+		MemoryAccessMonitor.disable()
+		console.log(globalWatchLibName + globalWatchLibRange + " -> disable" );
+		globalWatchLibName = null;
+		globalWatchLibRange = null;
+	}
+}
+
 
 // Android层栈回溯
 function jbacktracer() {

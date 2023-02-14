@@ -23,6 +23,8 @@ function hook(so, addr) {
 		lib = Module.findBaseAddress(so);
 	}
 
+//watch(lib.add(addr),0x10000)
+
 	b(lib.add(addr), c => {
 //		send(c.sp)
 //		send(c.sp.readPointer())
