@@ -3,7 +3,6 @@
 from common.layout import *
 import frida
 import sys
-import re
 import argparse
 import readline
 
@@ -12,17 +11,23 @@ LAYOUT_SCRIPT_FILE = "common/layout.js"
 UTILITY_SCRIPT_FILE = "common/utility.js"
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-n', '--app-name', help='set target application')
-parser.add_argument('-s', '--script', default=MAIN_SCRIPT_FILE,
-                    help='load custom script file')
+parser.add_argument('app', help='target application')
+parser.add_argument('-b', '--breakpoint', help='set breakpoint')
+parser.add_argument('-s', '--spawn-model',
+                    action='store_true', help='launch spawn model')
+parser.add_argument('-l', '--load', default=MAIN_SCRIPT_FILE,
+                    help='load custom script')
 
 args = parser.parse_args()
-MAIN_SCRIPT_FILE = args.script
-HOOK_TARGET_APP_NAME = args.app_name
 
-if HOOK_TARGET_APP_NAME is None:
-    print("Try exec -> \"python3 " + sys.argv[0] + " -h\"")
-    exit(0)
+if not args.breakpoint is None:
+    if len(format_breakpoint(args.breakpoint)) == 0:
+        print(RED("set breakpoint parameter type mismatch, ") +
+              GREEN("E.g -> '-b lib**.so!0x***'"))
+        exit(0)
+
+MAIN_SCRIPT_FILE = args.load
+HOOK_TARGET_APP = args.app
 
 # -------------------------- Main --------------------------
 layout = LayoutView()  # Initialization style theme
@@ -53,9 +58,19 @@ def on_message(message, data):
 
 
 device = frida.get_usb_device()
-process = device.attach(HOOK_TARGET_APP_NAME)
+
+# Get all process
+# print(device.enumerate_processes())
+
+# open -spawn_model use spawn attach application
+if args.spawn_model:
+    pid = device.get_process(HOOK_TARGET_APP).pid
+    pack = os.popen(
+        "adb shell \"ps -p %s -w | grep %s | awk '{print \$NF}'\"" % (pid, pid)).readlines()[0]
+    HOOK_TARGET_APP = device.spawn(pack.replace('\n', ''))
+
+process = device.attach(HOOK_TARGET_APP)
 process.enable_debugger()
-# pid = device.spawn("com.android.providers.downloads.ui", activity="com.android.providers.downloads.ui.DownloadList") #使用挂起调试时才用
 
 with open(MAIN_SCRIPT_FILE) as jscode:
     foot = jscode.read()
@@ -69,7 +84,6 @@ script.on('message', on_message)
 script.load()
 show_head_view_tips_info_color()
 script.exports.init(LayoutView.mjson)  # 对应js脚本的hook函数init()
-# device.resume(pid)  #对应挂起函数调用
 
 chose = '''
 Usage : [options] [value] [--]
@@ -98,6 +112,13 @@ Usage : [options] [value] [--]
 RE_MATH_EVAL = '(0x)?[0-9a-z]{4,16}(\+|\-)\d'
 
 
+def resume_process():
+    if args.spawn_model == True:
+        device.resume(HOOK_TARGET_APP)  # 对应挂起函数调用
+        # process.detach()
+        args.spawn_model = False
+
+
 def telescope(argv):
     address = argv[0]
     if (not re.match(RE_MATH_EVAL, address) is None):
@@ -116,12 +137,9 @@ def print_address(argv, carry=10):
         print(str(int(value, 16)))
 
 
-def set_breakpoint(argv):
-    address = argv[0]
-    targetLibName = None
-    if len(argv) > 1:
-        targetLibName = argv[1]
-    script.exports.set_breakpoint(address, targetLibName)
+def set_breakpoint(string):
+    info = format_breakpoint(string)
+    script.exports.set_breakpoint(info[1], info[0])
 
 
 def display_breakpoints_info(argv):
@@ -187,6 +205,11 @@ def hexdump(argv):
 
 
 # ------------------------ Interaction Model ------------------------
+# Whether need to set pre-breakpoint
+if not args.breakpoint is None:
+    set_breakpoint(args.breakpoint)
+
+
 LOGO = RED("\nYJ ➤ ")
 
 while True:
@@ -212,6 +235,8 @@ while True:
     elif (cmd == "ls"):
         os.system("ls --color")
     # -------------------- Frida command --------------------
+    elif (cmd == "run" or cmd == "r"):
+        resume_process()
     elif (cmd == "main" or cmd == "m"):
         show_all_view()
     elif (cmd == "lib"):
@@ -224,7 +249,7 @@ while True:
         print_address(argv, 16)
     elif ((cmd == "b" or cmd == "breakpoints")
           and (not argv is None)):
-        set_breakpoint(argv)
+        set_breakpoint(argv[0])
     elif ((cmd == "i" or cmd == "info")
           and (not argv is None)):
         display_breakpoints_info(argv)

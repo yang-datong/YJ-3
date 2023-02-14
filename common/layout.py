@@ -3,6 +3,7 @@
 import json
 import os
 import traceback
+import re
 
 
 class LayoutView:
@@ -324,3 +325,18 @@ def update_show_text_view_style(data, color, types, step="4"):
                 "{:<4s}".format(one), _format % int(two, 16), color))
     else:
         return
+
+
+def format_breakpoint(content):
+    try:
+        split = content.split('!')
+        lib_name = split[0]
+        offset = split[1]
+        if (re.match('lib.*\.so', lib_name) is None) or \
+                (re.match('0x.*', offset) is None):
+            raise Error()
+    except:
+        return []
+    return [lib_name, offset]
+
+
