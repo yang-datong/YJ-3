@@ -1,2 +1,5 @@
+__init__.py
+setup.py
+LICENSE
 /.YJ
 /common/__pycache__
