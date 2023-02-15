@@ -85,19 +85,21 @@ rpc.exports.watchMemory = (watchLibName,length) => {
 		let lib = Process.getModuleByName(watchLibName)
 		if (length == null) {
 			length = lib.size
+			//watch .text memory ->
+			//offset = objdump -h libxxx.so | grep .text | awk '{print $4}'
+			//length = objdump -h libxxx.so | grep .text | awk '{print $3}'
 		}else{
 			length = Number.parseInt(length)
 		}
+		unWatchMemory(); //Detecation befor whether live watchMemory
 		let baseAddressPointer = lib.base;
-		console.log("Watch memory size -> 0x"+length.toString(16));
 		watchMemory(baseAddressPointer, length);
 		globalWatchLibName = watchLibName;
-		globalWatchLibRange = "{" + baseAddressPointer + "-" + baseAddressPointer.add(length) + "}"
-		console.log(globalWatchLibName);
-		console.log(globalWatchLibRange);
+		globalWatchLibRange = "[ " + baseAddressPointer + " - " + baseAddressPointer.add(length) + " ]"
+		console.log("Watchmemory -> { name : "+ globalWatchLibName + ",range : " +globalWatchLibRange +",size : 0x"+length.toString(16));
 	}catch(e){
-		unWatch();
-		console.log(e + "Try \"info so\"");
+		unWatchMemory();
+		console.log(e + " -> Try \"info so\"");
 	}
 };
 
@@ -105,13 +107,16 @@ rpc.exports.watchMemory = (watchLibName,length) => {
 function watchMemory(pointer, length) {
 	MemoryAccessMonitor.enable({base: pointer, size: length}, {
 		onAccess(details) {
-			send('operation->' + details.operation
-				+ '\nfrom->' + details.from
-				+ '\naddress->' + details.address
-				+ '\nrangeIndex->' + details.rangeIndex
-				+ '\npageIndex->' + details.pageIndex
-				+ '\npagesCompleted->' + details.pagesCompleted
-				+ '\npagesTotal->' + details.pagesTotal,
+			send('watchMemory change -> { '
+				+ '\n\tname: ' + globalWatchLibName + globalWatchLibRange
+				+ '\n\toperation : ' + details.operation
+				+ '\n\tfrom : ' + details.from
+				+ '\n\taddress : ' + details.address
+				+ '\n\trangeIndex : ' + details.rangeIndex
+				+ '\n\tpageIndex : ' + details.pageIndex
+				+ '\n\tpagesCompleted : ' + details.pagesCompleted
+				+ '\n\tpagesTotal : ' + details.pagesTotal
+				+ '\n}'
 			);
 	}});
 }
@@ -123,7 +128,7 @@ rpc.exports.unWatchMemory = () => {
 function unWatchMemory() {
 	if (globalWatchLibName != null && globalWatchLibRange != null ) {
 		MemoryAccessMonitor.disable()
-		console.log(globalWatchLibName + globalWatchLibRange + " -> disable" );
+		send( "Detecationed " + globalWatchLibName + globalWatchLibRange + " -> disable" );
 		globalWatchLibName = null;
 		globalWatchLibRange = null;
 	}
