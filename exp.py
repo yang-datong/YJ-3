@@ -146,9 +146,10 @@ def set_breakpoint(argv):
         script.exports.set_breakpoint(address, targetLibName)
     else:
         script.exports.set_breakpoint(address)
-#def set_breakpoint(string):
+# def set_breakpoint(string):
 #    info = format_breakpoint(string)
 #    script.exports.set_breakpoint(info[1], info[0])
+
 
 def watch_memory(argv):
     targetLibName = argv[0]
@@ -156,10 +157,12 @@ def watch_memory(argv):
     lib = None
     if len(argv) == 2:
         length = argv[1]
-    script.exports.watch_memory(targetLibName,length)
+    script.exports.watch_memory(targetLibName, length)
+
 
 def un_watch_memory():
     script.exports.un_watch_memory()
+
 
 def write_file(argv):
     if len(argv) < 2:
@@ -167,7 +170,8 @@ def write_file(argv):
         return
     content = argv[0]
     fileName = argv[1]
-    script.exports.write_file(content,fileName)
+    script.exports.write_file(content, fileName)
+
 
 def hook_function(argv):
     pack = argv[0]
@@ -184,14 +188,14 @@ def display_info_list_type(argv):
         print("{0:^5s} {1:^16s} {2:^25s} {3:^25s}".format(
             "1", "breakpoint", BLUE(breakpoints[0]), GREEN(breakpoints[1])))
     elif show_type == "so" or show_type == "lib":
-        #Parameter 1 : whether just display user lib library
-        #Parameter 2 : whether print detail info
-        string = script.exports.show_allso(True,False)
+        # Parameter 1 : whether just display user lib library
+        # Parameter 2 : whether print detail info
+        string = script.exports.show_allso(True, False)
         list_name = sorted(string.split(','))
         for i in range(len(list_name)):
             print(f"{GREEN(list_name[i]):<30s}")
     elif show_type == "f" or show_type == "fun" \
-        or show_type == "func" or show_type == "function":
+            or show_type == "func" or show_type == "function":
         if len(argv) < 2:
             print("Need [targetLibName]")
             return
@@ -201,7 +205,7 @@ def display_info_list_type(argv):
     elif show_type == "jni":
         script.exports.get_j_n_i_func()
     else:
-        print("Don't found \"info " + show_type +"\"" )
+        print("Don't found \"info " + show_type + "\"")
 
 
 def delete_breakpoint(argv):

@@ -68,10 +68,10 @@ rpc.exports.showAllView = address => {
 };
 
 rpc.exports.setBreakpoint = (address, targetLibName) => {
-	try{
+	try {
 		setBreakpoint(address, targetLibName);
-	}catch(e){
-		console.log(e);
+	} catch (error) {
+		console.log(error);
 	}
 };
 
@@ -125,7 +125,7 @@ rpc.exports.readString = function (address, coding) {
 const message_tag = ' log ';
 const _width = 70;
 let step; let arch;
-var globalContext, globalLibName, globalLibBase, globalBreakpoint, globalLibPath;
+let globalContext; let globalLibName; let globalLibBase; let globalBreakpoint; let globalLibPath;
 
 // ------------------------- Initialization -------------------------
 // 向python块发送所需块数据
@@ -140,8 +140,8 @@ function init_segment_address(context) {
 
 function setBreakpoint(address, targetLibName) {
 	let targetLibBase;
-	//console.log("address->"+address+",targetLibName->"+targetLibName);
-	//console.log("globalBreakpoint->"+globalBreakpoint+",globalLibName->"+globalLibName);
+	// Console.log("address->"+address+",targetLibName->"+targetLibName);
+	// console.log("globalBreakpoint->"+globalBreakpoint+",globalLibName->"+globalLibName);
 	if (globalBreakpoint != undefined && address.toLowerCase() == globalBreakpoint.toLowerCase()) {
 		console.log('Don\'t duplicate addtion -> ' + globalBreakpoint);
 		return;
@@ -162,13 +162,14 @@ function setBreakpoint(address, targetLibName) {
 			console.log('Don\'t find ' + targetLibName);
 			return;
 		}
+
 		globalLibBase = targetLibBase;
 	}
 
 	console.log('SetBreakpoint -> {lib:' + targetLibName + ',address:' + address + '}');
 
-	//console.log("address->"+address+",targetLibName->"+targetLibName);
-	//console.log("globalBreakpoint->"+globalBreakpoint+",globalLibName->"+globalLibName);
+	// Console.log("address->"+address+",targetLibName->"+targetLibName);
+	// console.log("globalBreakpoint->"+globalBreakpoint+",globalLibName->"+globalLibName);
 
 	Interceptor.detachAll(); // 现在支持单个断点 hook 以后会考虑 TODO
 	b(globalLibBase.add(address), c => {

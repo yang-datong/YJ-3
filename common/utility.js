@@ -65,41 +65,41 @@ function showAllso(user, output) {
 			const path = so.path;
 			if (user) {
 				if (path.includes('/data/app/')) {
-					list_name += output == undefined || output == true ? so.path + ',' :   so.name + ' -> {size : 0x' + so.size.toString(16) + '. base : 0x' + so.base.toString(16) +'}'  + ',';
+					list_name += output == undefined || output == true ? so.path + ',' : so.name + ' -> {size : 0x' + so.size.toString(16) + '. base : 0x' + so.base.toString(16) + '}' + ',';
 				}
 			} else if (output == undefined || output == true) {
 				list_name += so.path + ',';
 			} else {
-				list_name += so.name + ' -> {size : 0x' + so.size.toString(16) + '. base : 0x' + so.base.toString(16) +'}'  + ',';
+				list_name += so.name + ' -> {size : 0x' + so.size.toString(16) + '. base : 0x' + so.base.toString(16) + '}' + ',';
 			}
 		}, onComplete() {},
 	});
 	return list_name;
 }
 
+let globalWatchLibName; let globalWatchLibRange;
 
-let globalWatchLibName,globalWatchLibRange;
-
-rpc.exports.watchMemory = (watchLibName,length) => {
-	try{
-		let lib = Process.getModuleByName(watchLibName)
+rpc.exports.watchMemory = (watchLibName, length) => {
+	try {
+		const lib = Process.getModuleByName(watchLibName);
 		if (length == null) {
-			length = lib.size
-			//watch .text memory ->
-			//offset = objdump -h libxxx.so | grep .text | awk '{print $4}'
-			//length = objdump -h libxxx.so | grep .text | awk '{print $3}'
-		}else{
-			length = Number.parseInt(length)
+			length = lib.size;
+			// Watch .text memory ->
+			// offset = objdump -h libxxx.so | grep .text | awk '{print $4}'
+			// length = objdump -h libxxx.so | grep .text | awk '{print $3}'
+		} else {
+			length = Number.parseInt(length);
 		}
-		unWatchMemory(); //Detecation befor whether live watchMemory
-		let baseAddressPointer = lib.base;
+
+		unWatchMemory(); // Detecation befor whether live watchMemory
+		const baseAddressPointer = lib.base;
 		watchMemory(baseAddressPointer, length);
 		globalWatchLibName = watchLibName;
-		globalWatchLibRange = "[ " + baseAddressPointer + " - " + baseAddressPointer.add(length) + " ]"
-		console.log("Watchmemory -> { name : "+ globalWatchLibName + ",range : " +globalWatchLibRange +",size : 0x"+length.toString(16));
-	}catch(e){
+		globalWatchLibRange = '[ ' + baseAddressPointer + ' - ' + baseAddressPointer.add(length) + ' ]';
+		console.log('Watchmemory -> { name : ' + globalWatchLibName + ',range : ' + globalWatchLibRange + ',size : 0x' + length.toString(16));
+	} catch (error) {
 		unWatchMemory();
-		console.log(e + " -> Try \"info so\"");
+		console.log(error + ' -> Try "info so"');
 	}
 };
 
@@ -116,19 +116,19 @@ function watchMemory(pointer, length) {
 				+ '\n\tpageIndex : ' + details.pageIndex
 				+ '\n\tpagesCompleted : ' + details.pagesCompleted
 				+ '\n\tpagesTotal : ' + details.pagesTotal
-				+ '\n}'
+				+ '\n}',
 			);
-	}});
+		}});
 }
 
 rpc.exports.unWatchMemory = () => {
 	unWatchMemory();
-}
+};
 
 function unWatchMemory() {
-	if (globalWatchLibName != null && globalWatchLibRange != null ) {
-		MemoryAccessMonitor.disable()
-		send( "Detecationed " + globalWatchLibName + globalWatchLibRange + " -> disable" );
+	if (globalWatchLibName != null && globalWatchLibRange != null) {
+		MemoryAccessMonitor.disable();
+		send('Detecationed ' + globalWatchLibName + globalWatchLibRange + ' -> disable');
 		globalWatchLibName = null;
 		globalWatchLibRange = null;
 	}
@@ -136,57 +136,59 @@ function unWatchMemory() {
 
 // Java level to back tracer
 function jbacktracer() {
-	const back = Java.use('android.util.Log').getStackTraceString(Java.use('java.lang.Throwable').$new())
-	send('Java Stack -> :\n' + back );
+	const back = Java.use('android.util.Log').getStackTraceString(Java.use('java.lang.Throwable').$new());
+	send('Java Stack -> :\n' + back);
 }
 
-rpc.exports.getExportFunc = (libName) => {
-	try{
-		getExportFunc(libName)
-	}catch(e){
-		console.log(e);
+rpc.exports.getExportFunc = libName => {
+	try {
+		getExportFunc(libName);
+	} catch (error) {
+		console.log(error);
 	}
-}
+};
 
 // Lib all exports function
 function getExportFunc(libName) {
 	const exports = Module.enumerateExports(libName);
-	console.log('Export -> { ')
+	console.log('Export -> { ');
 	for (const it of exports) {
-			console.log('\tname : ' + it.name
+		console.log('\tname : ' + it.name
 					 			+ ', type: ' + it.type
-								+ ', address: ' + it.address)
+								+ ', address: ' + it.address);
 	}
+
 	console.log('\n}');
 }
 
-rpc.exports.getImportFunc = (libName) => {
-	try{
+rpc.exports.getImportFunc = libName => {
+	try {
 		getImportFunc(libName);
-	}catch(e){
-		console.log(e);
+	} catch (error) {
+		console.log(error);
 	}
-}
+};
 
 // Lib all imports function
 function getImportFunc(libName) {
 	const imports = Module.enumerateImports(libName);
-	console.log('Import -> { ')
+	console.log('Import -> { ');
 	for (const it of imports) {
-			console.log('\tname : ' + it.name
+		console.log('\tname : ' + it.name
 					 			+ ', type: ' + it.type
-								+ ', address: ' + it.address)
+								+ ', address: ' + it.address);
 	}
+
 	console.log('\n}');
 }
 
 rpc.exports.getJNIFunc = () => {
-	try{
+	try {
 		getJNIFunc();
-	}catch(e){
-		console.log(e);
+	} catch (error) {
+		console.log(error);
 	}
-}
+};
 
 // JNI function
 function getJNIFunc() {
@@ -202,13 +204,13 @@ function getJNIFunc() {
 	}
 }
 
-rpc.exports.writeFile = (content,fileName) => {
-	try{
-		writeFile(content,fileName);
-	}catch(e){
-		console.log(e);
+rpc.exports.writeFile = (content, fileName) => {
+	try {
+		writeFile(content, fileName);
+	} catch (error) {
+		console.log(error);
 	}
-}
+};
 
 // Save data to file
 function writeFile(content, fileName) {
@@ -219,14 +221,13 @@ function writeFile(content, fileName) {
 	send('-----> save: ' + fileName + ' is done!! <------');
 }
 
-
-rpc.exports.javaHookClassAllFunctions = (pack) => {
-	try{
-		javaHookClassAllFunctions(pack)
-	}catch(e){
-		console.log(e);
+rpc.exports.javaHookClassAllFunctions = pack => {
+	try {
+		javaHookClassAllFunctions(pack);
+	} catch (error) {
+		console.log(error);
 	}
-}
+};
 
 // Hook all functions of a single class in the java level
 // @parameter pack : "com.xx.xx.class"
@@ -242,6 +243,7 @@ function javaHookClassAllFunctions(pack) {
 				for (const argument of arguments) {
 					console.log(argument);
 				}
+
 				return Reflect.apply(this[methodName], this, arguments);
 			};
 		}

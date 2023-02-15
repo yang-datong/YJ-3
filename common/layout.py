@@ -159,7 +159,8 @@ class LayoutView:
         result = dump_target_binary(
             _json["path"], _json['name'], LayoutView.code_show_row_number, offset)
         for i in range(len(result)):
-            data = result[i].replace(" ","").replace("\t"," ").replace("\n", "")
+            data = result[i].replace(" ", "").replace(
+                "\t", " ").replace("\n", "")
             if (i < int(LayoutView.code_show_row_number, 10)):
                 print("   0x{0}".format(data))
             elif (i == int(LayoutView.code_show_row_number, 10)):
@@ -338,5 +339,3 @@ def format_breakpoint(content):
     except:
         return []
     return [lib_name, offset]
-
-
