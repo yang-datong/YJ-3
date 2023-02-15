@@ -37,13 +37,13 @@ rpc.exports.init = mjson => {
 rpc.exports.libcBaseAddress = () => globalLibBase;
 
 rpc.exports.readPointer = address => {
-	try{
-	return new NativePointer(address).readPointer();
-	}catch(e){
-		console.log(e);
+	try {
+		return new NativePointer(address).readPointer();
+	} catch (error) {
+		console.log(error);
 		return 0;
 	}
-}
+};
 
 rpc.exports.telescope = address => {
 	try {
@@ -66,7 +66,7 @@ rpc.exports.trace = model => {
 	show_trace_view(globalContext, model);
 };
 
-rpc.exports.showAllView = address => {
+rpc.exports.showAllView = _address => {
 	try {
 		ls(globalContext);
 	} catch (error) {
@@ -79,14 +79,14 @@ rpc.exports.setBreakpoint = (address, targetLibName) => {
 		setBreakpoint(address, targetLibName);
 	} catch (error) {
 		console.log(error);
-		deleteBreakpoint(address)
+		deleteBreakpoint(address);
 	}
 };
 
 rpc.exports.getBreakpoints = () => globalBreakpoint + ' ' + globalLibName;
 
 rpc.exports.deleteBreakpoint = address => {
-	deleteBreakpoint(address)
+	deleteBreakpoint(address);
 };
 
 rpc.exports.readString = function (address, coding) {
@@ -179,7 +179,7 @@ function setBreakpoint(address, targetLibName) {
 	console.log('SetBreakpoint -> {lib:' + globalLibName + ',address:' + address + '}');
 }
 
-function deleteBreakpoint(address) {
+function deleteBreakpoint(_address) {
 	Interceptor.detachAll();
 	globalLibBase = undefined;
 	globalContext = undefined;
@@ -188,8 +188,6 @@ function deleteBreakpoint(address) {
 	globalLibPath = undefined;
 //	Interceptor.revert(new NativePointer("0x" + (Number.parseInt(address) + Number.parseInt(globalLibBase.base)).toString(16)));
 }
-
-
 
 // ------------------------------ View ------------------------------
 // 显示一个指针块视图
@@ -280,7 +278,7 @@ function show_trace_view(ctx, model) {
 	send([Thread.backtrace(ctx, model).map(DebugSymbol.fromAddress).join('\n') + TRACE_TAG, VIEW_TRACE]);
 }
 
-function show_code_view(ctx) {
+function show_code_view() {
 	const offset = Number.parseInt(globalBreakpoint);
 	const path = globalLibPath;
 	const name = globalLibName;
@@ -294,6 +292,6 @@ function show_view(context) {
 	init_segment_address(context);
 	show_registers(context);
 	show_telescope_view(context.sp, VIEW_STACK); // 栈空间视图
-	show_code_view(context);
+	show_code_view();
 	// Show_trace_view(context,Backtracer.FUZZY)
 }

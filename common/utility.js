@@ -37,7 +37,7 @@ function b(...args) {
 	globalLibPath = lib.path;
 
 	Interceptor.attach(addr, {
-		onEnter(args) {
+		onEnter(_args) {
 			if (is_clear != undefined) {
 				send(CLEAR_TAG);
 			}
@@ -47,7 +47,7 @@ function b(...args) {
 			}
 
 			globalContext = this.context;
-		}, onLeave(returnValue) {
+		}, onLeave(_returnValue) {
 			if (on_leave != undefined) {
 				on_leave(this.context);
 			}
