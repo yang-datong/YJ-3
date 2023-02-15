@@ -214,7 +214,8 @@ rpc.exports.writeFile = (content, fileName) => {
 
 // Save data to file
 function writeFile(content, fileName) {
-	const file = new File('/sdcard/' + fileName, 'w+');
+	fileName = '/sdcard/' + fileName;
+	const file = new File(fileName, 'w+');
 	file.write(content);
 	file.flush();
 	file.close();

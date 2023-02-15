@@ -23,18 +23,10 @@ function hook(so, addr) {
 		lib = Module.findBaseAddress(so);
 	}
 
-	getExportFunc("libttmplayer.so")
-	try{
-		getImportFunc("libttmplayer.so")
-		getJNIFunc()
-	}catch(e){
-		console.log(e);
-	}
-
 	b(lib.add(addr), c => {
 //		send(c.sp)
 //		send(c.sp.readPointer())
-//		ls(c);
+		ls(c);
 	}, c => {
 
 	});

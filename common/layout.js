@@ -36,7 +36,14 @@ rpc.exports.init = mjson => {
 // ------------------- Used to provide python call ------------------
 rpc.exports.libcBaseAddress = () => globalLibBase;
 
-rpc.exports.readPointer = address => new NativePointer(address).readPointer();
+rpc.exports.readPointer = address => {
+	try{
+	return new NativePointer(address).readPointer();
+	}catch(e){
+		console.log(e);
+		return 0;
+	}
+}
 
 rpc.exports.telescope = address => {
 	try {
@@ -72,19 +79,14 @@ rpc.exports.setBreakpoint = (address, targetLibName) => {
 		setBreakpoint(address, targetLibName);
 	} catch (error) {
 		console.log(error);
+		deleteBreakpoint(address)
 	}
 };
 
 rpc.exports.getBreakpoints = () => globalBreakpoint + ' ' + globalLibName;
 
 rpc.exports.deleteBreakpoint = address => {
-	Interceptor.detachAll();
-	globalLibBase = undefined;
-	globalContext = undefined;
-	globalLibName = undefined;
-	globalBreakpoint = undefined;
-	globalLibPath = undefined;
-//	Interceptor.revert(new NativePointer("0x" + (Number.parseInt(address) + Number.parseInt(globalLibBase.base)).toString(16)));
+	deleteBreakpoint(address)
 };
 
 rpc.exports.readString = function (address, coding) {
@@ -125,7 +127,8 @@ rpc.exports.readString = function (address, coding) {
 const message_tag = ' log ';
 const _width = 70;
 let step; let arch;
-let globalContext; let globalLibName; let globalLibBase; let globalBreakpoint; let globalLibPath;
+var globalContext, globalLibName, globalLibBase, globalBreakpoint, globalLibPath;
+// Var globalContext, globalLibName, globalLibBase, globalBreakpoint, globalLibPath;
 
 // ------------------------- Initialization -------------------------
 // 向python块发送所需块数据
@@ -165,9 +168,6 @@ function setBreakpoint(address, targetLibName) {
 
 		globalLibBase = targetLibBase;
 	}
-
-	console.log('SetBreakpoint -> {lib:' + targetLibName + ',address:' + address + '}');
-
 	// Console.log("address->"+address+",targetLibName->"+targetLibName);
 	// console.log("globalBreakpoint->"+globalBreakpoint+",globalLibName->"+globalLibName);
 
@@ -175,7 +175,21 @@ function setBreakpoint(address, targetLibName) {
 	b(globalLibBase.add(address), c => {
 		ls(c);
 	});
+
+	console.log('SetBreakpoint -> {lib:' + globalLibName + ',address:' + address + '}');
 }
+
+function deleteBreakpoint(address) {
+	Interceptor.detachAll();
+	globalLibBase = undefined;
+	globalContext = undefined;
+	globalLibName = undefined;
+	globalBreakpoint = undefined;
+	globalLibPath = undefined;
+//	Interceptor.revert(new NativePointer("0x" + (Number.parseInt(address) + Number.parseInt(globalLibBase.base)).toString(16)));
+}
+
+
 
 // ------------------------------ View ------------------------------
 // 显示一个指针块视图
