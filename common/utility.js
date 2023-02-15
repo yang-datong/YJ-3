@@ -134,80 +134,114 @@ function unWatchMemory() {
 	}
 }
 
-
-// Android层栈回溯
+// Java level to back tracer
 function jbacktracer() {
-	send('Java Stack -> :\n' + Java.use('android.util.Log').getStackTraceString(Java.use('java.lang.Throwable').$new()));
+	const back = Java.use('android.util.Log').getStackTraceString(Java.use('java.lang.Throwable').$new())
+	send('Java Stack -> :\n' + back );
 }
 
-// So的所有导出函数
-function export_func(so) {
-	const exports = Module.enumerateExportsSync(so);
-	for (const export_ of exports) {
-		send(export_.name + ': ' + export_.address + ',so->' + so);
-			 b(export_.address.add(1), c => {
-			 	send(export_.name);
-			 });
+rpc.exports.getExportFunc = (libName) => {
+	try{
+		getExportFunc(libName)
+	}catch(e){
+		console.log(e);
+	}
+}
 
-		if (export_.name == 'ByteVC1_dec_create') {
-			send(export_.name + ': ' + export_.address + ',so->' + so);
+// Lib all exports function
+function getExportFunc(libName) {
+	const exports = Module.enumerateExports(libName);
+	console.log('Export -> { ')
+	for (const it of exports) {
+			console.log('\tname : ' + it.name
+					 			+ ', type: ' + it.type
+								+ ', address: ' + it.address)
+	}
+	console.log('\n}');
+}
+
+rpc.exports.getImportFunc = (libName) => {
+	try{
+		getImportFunc(libName);
+	}catch(e){
+		console.log(e);
+	}
+}
+
+// Lib all imports function
+function getImportFunc(libName) {
+	const imports = Module.enumerateImports(libName);
+	console.log('Import -> { ')
+	for (const it of imports) {
+			console.log('\tname : ' + it.name
+					 			+ ', type: ' + it.type
+								+ ', address: ' + it.address)
+	}
+	console.log('\n}');
+}
+
+rpc.exports.getJNIFunc = () => {
+	try{
+		getJNIFunc();
+	}catch(e){
+		console.log(e);
+	}
+}
+
+// JNI function
+function getJNIFunc() {
+	const symbols = Module.enumerateSymbols('libart.so');
+	for (const it of symbols) {
+		const name = it.name;
+		if (name.includes('JNI')
+				&& !name.includes('CheckJNI')
+				&& name.includes('art')
+				&& name.includes('GetStringUTFChars')) {
+			console.log(name);
 		}
 	}
 }
 
-function import_func(so, target) {
-	// So的所有导入函数
-	const exports = Module.enumerateImportsSync(so);
-	for (const export_ of exports) {
-		// Send(exports[i].name + ": " + exports[i].address+",so->"+so);
-		if (export_.name == target) {
-			send('Find!!!' + so + '->' + export_.name);
-		}
+rpc.exports.writeFile = (content,fileName) => {
+	try{
+		writeFile(content,fileName);
+	}catch(e){
+		console.log(e);
 	}
 }
 
-// So的所有导入函数
-function hook_libart() {
-	let GetStringUTFChars_addr = null;
-	const module_libart = Process.findModuleByName('libart.so');
-	const symbols = module_libart.enumerateSymbols();
-	for (const symbol_ of symbols) {
-		const name = symbol_.name;
-		if ((name.includes('JNI'))
-						&& (!name.includes('CheckJNI'))
-						&& (name.includes('art')) && name.includes('GetStringUTFChars')) {
-			log(name);
-			// 获取到指定 jni 方法地址
-			GetStringUTFChars_addr = symbol_.address;
-		}
-	}
-}
-
-// 保存数据到文件
-function writeFile(content, file_name) {
-	const file = new File('/sdcard/' + file_name, 'w+');// A+表示追加内容，此处的模式和c语言的fopen函数模式相同
+// Save data to file
+function writeFile(content, fileName) {
+	const file = new File('/sdcard/' + fileName, 'w+');
 	file.write(content);
 	file.flush();
 	file.close();
-	send('-----> save: ' + file_name + ' is done!! <------');
+	send('-----> save: ' + fileName + ' is done!! <------');
 }
 
-function calss_methods() {
-// Hook类的所有方法
-	const md5Util = Java.use('com.ss.texturerender.VideoSurfaceTexture');
-	const methods = md5Util.class.getDeclaredMethods();
-	for (const method of methods) {
-		var methodName = method.getName();
-		console.log(methodName);
 
-		// 这里遍历方法的所有重载
-		for (let i = 0; i < md5Util[methodName].overloads.length; i++) {
-			md5Util[methodName].overloads[i].implementation = function () {
+rpc.exports.javaHookClassAllFunctions = (pack) => {
+	try{
+		javaHookClassAllFunctions(pack)
+	}catch(e){
+		console.log(e);
+	}
+}
+
+// Hook all functions of a single class in the java level
+// @parameter pack : "com.xx.xx.class"
+function javaHookClassAllFunctions(pack) {
+	const cls = Java.use(pack);
+	const methods = cls.class.getDeclaredMethods();
+	for (const it of methods) {
+		var methodName = it.getName();
+		console.log(methodName);
+		for (let i = 0; i < cls[methodName].overloads.length; i++) {
+			cls[methodName].overloads[i].implementation = () => {
+				console.log(cls[methodName]);
 				for (const argument of arguments) {
 					console.log(argument);
 				}
-
-				// 这里需要调用原来的方法，但是原来的方法的参数个数不确定，所以需要使用到arguments
 				return Reflect.apply(this[methodName], this, arguments);
 			};
 		}

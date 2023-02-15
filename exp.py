@@ -161,6 +161,17 @@ def watch_memory(argv):
 def un_watch_memory():
     script.exports.un_watch_memory()
 
+def write_file(argv):
+    if len(argv) < 2:
+        print("Need [content] and [filename](output file default in /sdcard/xxx)")
+        return
+    content = argv[0]
+    fileName = argv[1]
+    script.exports.write_file(content,fileName)
+
+def hook_function(argv):
+    pack = argv[0]
+    script.exports.java_hook_class_all_functions(pack)
 
 
 def display_info_list_type(argv):
@@ -172,17 +183,25 @@ def display_info_list_type(argv):
             "Num", "Type", "Address", "What"))
         print("{0:^5s} {1:^16s} {2:^25s} {3:^25s}".format(
             "1", "breakpoint", BLUE(breakpoints[0]), GREEN(breakpoints[1])))
-    if show_type == "so":
-        string = script.exports.show_allso(True,False)
+    elif show_type == "so" or show_type == "lib":
         #Parameter 1 : whether just display user lib library
         #Parameter 2 : whether print detail info
+        string = script.exports.show_allso(True,False)
         list_name = sorted(string.split(','))
-        #list_name = string.split(',')
         for i in range(len(list_name)):
-            #if i % 2 != 0:
-            #    print(f"{GREEN(list_name[i]):<30s}",end=" | ")
-            #else:
-                print(f"{GREEN(list_name[i]):<30s}")
+            print(f"{GREEN(list_name[i]):<30s}")
+    elif show_type == "f" or show_type == "fun" \
+        or show_type == "func" or show_type == "function":
+        if len(argv) < 2:
+            print("Need [targetLibName]")
+            return
+        libName = argv[1]
+        script.exports.get_export_func(libName)
+        script.exports.get_import_func(libName)
+    elif show_type == "jni":
+        script.exports.get_j_n_i_func()
+    else:
+        print("Don't found \"info " + show_type +"\"" )
 
 
 def delete_breakpoint(argv):
@@ -288,6 +307,12 @@ while True:
         watch_memory(argv)
     elif (cmd == "uw" or cmd == "unwatch"):
         un_watch_memory()
+    elif ((cmd == "wf" or cmd == "writefile")
+          and (not argv is None)):
+        write_file(argv)
+    elif ((cmd == "hf" or cmd == "hookfunction")
+          and (not argv is None)):
+        hook_function(argv)
     elif ((cmd == "i" or cmd == "info")
           and (not argv is None)):
         display_info_list_type(argv)
