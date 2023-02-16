@@ -43,6 +43,8 @@ class Interaction:
                 self.libc_base_address()
             elif (cmd == "trace" or cmd == "t"):
                 self.trace(argv)
+            elif (cmd == "expr"):
+                self.into_expr(argv)
             elif (cmd == "print" or cmd == "p"):
                 self.print_address(argv, 10)
             elif (cmd == "hex" or cmd == "x"):
@@ -67,6 +69,11 @@ class Interaction:
                 self.write_file(argv)
             elif (cmd == "hookfunction" or cmd == "hf"):
                 self.hook_function(argv)
+            elif (re.match("!.*",cmd)):
+                try:
+                    exec(cmd.replace("!",""))
+                except Exception as e:
+                    print(e)
             else:
                 print("Option does not exist : \"%s\".  Try \"help\"" % cmd)
 
@@ -88,6 +95,18 @@ class Interaction:
         if (not re.match(Interaction.RE_MATH_EVAL, address) is None):
             address = str(hex(eval(address)))
         self.script.exports.telescope(address)
+
+    def into_expr(self,argv):
+        if len(argv) < 4:
+            print(argv[0] + " format error, try exec \"help\"")
+            return
+        try:
+            #print(argv[1] + argv[2] + argv[3])
+            address = eval(argv[1] + argv[2] + argv[3])
+            print(address)
+        except Exception as e:
+            print(e)
+
 
     def print_address(self, argv, carry=10):
         if len(argv) == 1:
@@ -117,16 +136,51 @@ class Interaction:
         else:
             self.script.exports.set_breakpoint(address)
 
+    #Just only one argument -> as much as possible more memory
+    #Live two arguments -> [libName] [start-end] #start > 0 , end<size
+    #Live three arguments -> [libName] [start] [end] #start > 0 , end<size
     def watch_memory(self, argv):
         if len(argv) == 1:
             print(argv[0] + " format error, try exec \"help\"")
             return
-        targetLibName = argv[1]
-        length = None
-        lib = None
-        if len(argv) == 3:
-            length = argv[2]
-        self.script.exports.watch_memory(targetLibName, length)
+        elif len(argv) == 2:
+            targetLibName = argv[1]
+            self.script.exports.watch_memory(targetLibName,None)
+        elif len(argv) == 3:
+            targetLibName = argv[1]
+            HEX_OR_DEC_MATH = '(0x)?[0-9A-Fa-f]{1,16}-(0x)?[0-9A-Fa-f]{1,16}'
+            if (not re.match(HEX_OR_DEC_MATH, argv[2])):
+                print("Format error as -> [start]-[end]")
+                return
+            sp = argv[2].split('-')
+            offset = self.toAddress(sp[0])
+            length = self.toAddress(sp[1]) - offset
+            if (offset < 0 or length <= 0):
+                print("Format error")
+                return
+            self.script.exports.watch_memory(targetLibName,str(length),str(offset))
+        elif len(argv) == 4:
+            targetLibName = argv[1]
+            offset = self.toAddress(argv[2])
+            length = self.toAddress(argv[3]) - offset
+            if (offset < 0 or length <= 0):
+                print("Format error")
+                return
+            self.script.exports.watch_memory(targetLibName,str(length),str(offset))
+
+
+    def toAddress(self,string):
+        HEX_MATH = '0x[0-9A-Fa-f]{1,16}$'
+        DEC_MATH = '\d{1,16}$'
+        if (re.match(HEX_MATH, string)):
+            int_type = 16
+        elif (re.match(DEC_MATH, string)):
+            int_type = 10
+        else:
+            print("Format error as -> 0-0xfxxxx")
+            return -1
+        return int(string,int_type)
+
 
     def un_watch_memory(self):
         self.script.exports.un_watch_memory()
@@ -166,6 +220,9 @@ class Interaction:
             list_name = sorted(string.split(','))
             for i in range(len(list_name)):
                 print(f"{GREEN(list_name[i]):<30s}")
+        elif show_type == "w" or show_type == "watch":
+            watch_info = self.script.exports.get_watchs()
+            print(GREEN("watch info -> " + watch_info))
         elif show_type == "f" or show_type == "fun" \
                 or show_type == "func" or show_type == "function":
             if len(argv) < 3:
@@ -245,16 +302,19 @@ class Interaction:
         q|quit                                  Exit frida
         cl|clear                                Clean screen
         ls                                      Display current list
+        ![python]                               Exec python code
 
 ------- YJ ---------
         r|run                                   Continue spawn model attach
         m|main                                  Display all view
         p [pointer]                             Display pointer value
         x [pointer]                             Display pointer hexadecimal value
+        expr [calculation expression]           Calculation expression result
         b|breakpoint [address] [targetLibName]  Add target lib and break point
         t|trace [accurate/fuzzy]                Display called function list(default fuzzy)
         so|lib                                  Print current target dynamic library base address
         i|info [b|breakpoints]                  Print current all break pointer
+        i|info [w|watch]                        Print all watch target
         i|info [so|lib]                         Print all loaded dynamic library
         i|info [f|fun] [lib name]               Print target lib all functions
         i|info [jni]                            Print all jni functions
