@@ -55,9 +55,149 @@ function b(...args) {
 	});
 }
 
-// ------------------------- Function -------------------------------
-rpc.exports.showAllso = (user, output) => showAllso(user, output);
+// ------------------- Used to provide python call ------------------
+rpc.exports.libcBaseAddress = () => globalLibBase;
 
+rpc.exports.getBreakpoints = () => globalBreakpoint + ' ' + globalLibName;
+
+rpc.exports.readPointer = address => {
+	try {
+		return new NativePointer(address).readPointer();
+	} catch (error) {
+		console.log(error);
+		return 0;
+	}
+};
+
+rpc.exports.telescope = address => {
+	try {
+		show_telescope_view(new NativePointer(address), VIEW_TELESCOPE);
+	} catch (error) {
+		console.log(error);
+	}
+};
+
+rpc.exports.hexdump = function (address, size) {
+	try {
+		dump(new NativePointer(address), size);
+	} catch (error) {
+		console.log(error);
+	}
+};
+
+rpc.exports.trace = model => {
+	model = model == undefined ? Backtracer.ACCURATE : Backtracer.FUZZY;
+	show_trace_view(globalContext, model);
+};
+
+rpc.exports.showAllView = _address => {
+	try {
+		show_view(globalContext);
+	} catch (error) {
+		console.log(error);
+	}
+};
+
+rpc.exports.setBreakpoint = (address, targetLibName) => {
+	try {
+		setBreakpoint(address, targetLibName);
+	} catch (error) {
+		console.log(error);
+		deleteBreakpoint(address);
+	}
+};
+
+function setBreakpoint(address, targetLibName) {
+	let targetLibBase;
+	// Console.log("address->"+address+",targetLibName->"+targetLibName);
+	// console.log("globalBreakpoint->"+globalBreakpoint+",globalLibName->"+globalLibName);
+	if (globalBreakpoint != undefined && address.toLowerCase() == globalBreakpoint.toLowerCase()) {
+		console.log('Don\'t duplicate addtion -> ' + globalBreakpoint);
+		return;
+	}
+
+	if (targetLibName == undefined || targetLibName === '') {
+		targetLibName = globalLibName;
+	}
+
+	if (targetLibName == undefined) {
+		console.log('Currentil not found available target dynamic lib. Exec -> b [address] [targetLibName]');
+		return;
+	}
+
+	if (targetLibName != globalLibName) {
+		targetLibBase = Module.findBaseAddress(targetLibName);
+		if (targetLibBase == null) {
+			console.log('Don\'t find ' + targetLibName);
+			return;
+		}
+
+		globalLibBase = targetLibBase;
+	}
+	// Console.log("address->"+address+",targetLibName->"+targetLibName);
+	// console.log("globalBreakpoint->"+globalBreakpoint+",globalLibName->"+globalLibName);
+
+	Interceptor.detachAll(); // 现在支持单个断点 hook 以后会考虑 TODO
+	b(globalLibBase.add(address), c => {
+		ls(c);
+	});
+
+	console.log('SetBreakpoint -> {lib:' + globalLibName + ',address:' + address + '}');
+}
+
+rpc.exports.deleteBreakpoint = address => {
+	try {
+		deleteBreakpoint(address);
+	} catch (error) {
+		console.log(error);
+	}
+};
+
+function deleteBreakpoint(_address) {
+	Interceptor.detachAll();
+	globalLibBase = undefined;
+	globalContext = undefined;
+	globalLibName = undefined;
+	globalBreakpoint = undefined;
+	globalLibPath = undefined;
+//	Interceptor.revert(new NativePointer("0x" + (Number.parseInt(address) + Number.parseInt(globalLibBase.base)).toString(16)));
+}
+
+rpc.exports.readString = function (address, coding) {
+	let string_;
+	try {
+		switch (coding) {
+			case 'utf8': {
+				string_ = new NativePointer(address).readUtf8String();
+				break;
+			}
+
+			case 'c': {
+				string_ = new NativePointer(address).readCString();
+				break;
+			}
+
+			case 'utf16': {
+				string_ = new NativePointer(address).readUrf16String();
+				break;
+			}
+
+			case 'ansi': {
+				string_ = new NativePointer(address).readAnsiString();
+				break;
+			}
+
+			default: { string_ = new NativePointer(address).readUtf8String();
+			}
+		}
+	} catch (error) {
+		string_ = 'Don\'t found match string -> ' + error;
+	}
+
+	return string_;
+};
+
+rpc.exports.showAllso = (user, output) => showAllso(user, output);
 function showAllso(user, output) {
 	let list_name = '';
 	Process.enumerateModules({
@@ -78,33 +218,36 @@ function showAllso(user, output) {
 }
 
 let globalWatchLibName; let globalWatchLibRange;
-
 rpc.exports.watchMemory = (watchLibName, length) => {
 	try {
-		const lib = Process.getModuleByName(watchLibName);
-		if (length == null) {
-			length = lib.size;
-			// Watch .text memory ->
-			// offset = objdump -h libxxx.so | grep .text | awk '{print $4}'
-			// length = objdump -h libxxx.so | grep .text | awk '{print $3}'
-		} else {
-			length = Number.parseInt(length);
-		}
-
-		unWatchMemory(); // Detecation befor whether live watchMemory
-		const baseAddressPointer = lib.base;
-		watchMemory(baseAddressPointer, length);
-		globalWatchLibName = watchLibName;
-		globalWatchLibRange = '[ ' + baseAddressPointer + ' - ' + baseAddressPointer.add(length) + ' ]';
-		console.log('Watchmemory -> { name : ' + globalWatchLibName + ',range : ' + globalWatchLibRange + ',size : 0x' + length.toString(16));
+		watchMemory(watchLibName, length);
 	} catch (error) {
 		unWatchMemory();
 		console.log(error + ' -> Try "info so"');
 	}
 };
 
+function watchMemory(watchLibName, length) {
+	const lib = Process.getModuleByName(watchLibName);
+	if (length == null) {
+		length = lib.size;
+		// Watch .text memory ->
+		// offset = objdump -h libxxx.so | grep .text | awk '{print $4}'
+		// length = objdump -h libxxx.so | grep .text | awk '{print $3}'
+	} else {
+		length = Number.parseInt(length);
+	}
+
+	unWatchMemory(); // Detecation befor whether live watchMemory
+	const baseAddressPointer = lib.base;
+	_watchMemory(baseAddressPointer, length);
+	globalWatchLibName = watchLibName;
+	globalWatchLibRange = '[ ' + baseAddressPointer + ' - ' + baseAddressPointer.add(length) + ' ]';
+	console.log('Watchmemory -> { name : ' + globalWatchLibName + ',range : ' + globalWatchLibRange + ',size : 0x' + length.toString(16));
+}
+
 // 监控内存数据
-function watchMemory(pointer, length) {
+function _watchMemory(pointer, length) {
 	MemoryAccessMonitor.enable({base: pointer, size: length}, {
 		onAccess(details) {
 			send('watchMemory change -> { '

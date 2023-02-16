@@ -232,7 +232,7 @@ class Interaction:
             except:
                 size = int(size, 16)
 
-        value = self.script.exports.phexdump(address, size)
+        value = self.script.exports.hexdump(address, size)
 
     MENU = '''
     Usage : [options] [value] [--]
