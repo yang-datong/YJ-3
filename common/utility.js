@@ -116,19 +116,20 @@ rpc.exports.setBreakpoint = (address, targetLibName) => {
 };
 
 function setBreakpoint(address, targetLibName) {
-	let targetLibBase;
+	let targetLibBase = null;
 	// Console.log("address->"+address+",targetLibName->"+targetLibName);
 	// console.log("globalBreakpoint->"+globalBreakpoint+",globalLibName->"+globalLibName);
-	if (globalBreakpoint != undefined && address.toLowerCase() == globalBreakpoint.toLowerCase()) {
+	if (globalBreakpoint != undefined && globalBreakpoint != null
+		&& address.toLowerCase() == globalBreakpoint.toLowerCase()) {
 		console.log('Don\'t duplicate addtion -> ' + globalBreakpoint);
 		return;
 	}
 
-	if (targetLibName == undefined || targetLibName === '') {
+	if (targetLibName == null || targetLibName === '') {
 		targetLibName = globalLibName;
 	}
 
-	if (targetLibName == undefined) {
+	if (targetLibName == null) {
 		console.log('Currentil not found available target dynamic lib. Exec -> b [address] [targetLibName]');
 		return;
 	}
@@ -146,7 +147,6 @@ function setBreakpoint(address, targetLibName) {
 	// console.log("globalBreakpoint->"+globalBreakpoint+",globalLibName->"+globalLibName);
 
 	Interceptor.detachAll(); // 现在支持单个断点 hook 以后会考虑 TODO
-	// b 0xF6978+8 libttmplayer.so
 	address = Number.parseInt(address);
 	if (address > globalLibBase) {
 		address -= globalLibBase;
@@ -222,12 +222,15 @@ function showAllso(user, output) {
 			const path = so.path;
 			if (user) {
 				if (path.includes('/data/app/')) {
-					list_name += output == undefined || output == true ? so.path + ',' : so.name + ' -> {size : 0x' + so.size.toString(16) + '. base : 0x' + so.base.toString(16) + '}' + ',';
+					//list_name += output == undefined || output == true ? so.path + ',' : so.name + ' -> {size : 0x' + so.size.toString(16) + '. base : 0x' + so.base.toString(16) + '}' + ',';
+					list_name += output == undefined || output == true ? JSON.stringify(so.path) + " " : JSON.stringify({name:so.name ,size:so.size.toString(16) ,base:so.base.toString(16)}) + " "
 				}
 			} else if (output == undefined || output == true) {
-				list_name += so.path + ',';
+				//list_name += so.path + ',';
+				list_name += JSON.stringify(so.path) + " ";
 			} else {
-				list_name += so.name + ' -> {size : 0x' + so.size.toString(16) + '. base : 0x' + so.base.toString(16) + '}' + ',';
+				//list_name += so.name + ' -> {size : 0x' + so.size.toString(16) + '. base : 0x' + so.base.toString(16) + '}' + ',';
+				list_name += JSON.stringify({name:so.name , size:so.size.toString(16) , base:so.base.toString(16)}) + " ";
 			}
 		}, onComplete() {},
 	});
@@ -379,9 +382,9 @@ function getJNIFunc() {
 	for (const it of symbols) {
 		const name = it.name;
 		if (name.includes('JNI')
-				&& !name.includes('CheckJNI')
-				&& name.includes('art')
-				&& name.includes('GetStringUTFChars')) {
+//				&& !name.includes('CheckJNI')
+				&& name.includes('art') ){
+//				&& name.includes('GetStringUTFChars')) {
 			console.log(name);
 		}
 	}
