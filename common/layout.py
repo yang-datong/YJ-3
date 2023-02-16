@@ -17,7 +17,7 @@ class LayoutView:
 
     # 显示一条分割线
     def show_line_view(self):
-        print("─"*int(self.width - LayoutView.end_line_len - int(len(LayoutView.message_tag))
+        print("\n"+"─"*int(self.width - LayoutView.end_line_len - int(len(LayoutView.message_tag))
                       ) + CYAN(LayoutView.message_tag) + "─"*LayoutView.end_line_len+"\n")
 
     def check_is_need_clear_view(self):

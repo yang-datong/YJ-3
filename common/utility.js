@@ -1,6 +1,6 @@
 // ------------------------- Alias -------------------------------
 const log = (...info) => {
-	const befor = Array.from({length: _width - END_LINE_LEN - message_tag.length + 1}).join('=');
+	const befor = Array.from({length: 70 - END_LINE_LEN - message_tag.length + 1}).join('=');
 	const end = new Array(END_LINE_LEN).join('=');
 	console.log(befor + message_tag + end + '\n');
 	console.log(...info);
@@ -19,7 +19,9 @@ const tele = (...args) => {
 };
 
 const ls = ctx => {
-	show_view(ctx);
+	if (isAutoShowView) {
+		show_view(ctx);
+	}
 };
 
 // 用于Interceptor.attach的封装
@@ -61,6 +63,10 @@ rpc.exports.libcBaseAddress = () => globalLibBase;
 rpc.exports.getBreakpoints = () => globalBreakpoint + ' ' + globalLibName;
 
 rpc.exports.getWatchs = () => globalWatchLibName + globalWatchLibRange;
+
+rpc.exports.stopAutoShowView = () => {
+	isAutoShowView = false;
+};
 
 rpc.exports.readPointer = address => {
 	try {
@@ -140,11 +146,20 @@ function setBreakpoint(address, targetLibName) {
 	// console.log("globalBreakpoint->"+globalBreakpoint+",globalLibName->"+globalLibName);
 
 	Interceptor.detachAll(); // 现在支持单个断点 hook 以后会考虑 TODO
+	// b 0xF6978+8 libttmplayer.so
+	address = Number.parseInt(address);
+	if (address > globalLibBase) {
+		address -= globalLibBase;
+	}
+	// 这样做是为了防止再new NativePointer() .或者因此再创建一个临时变量。栈空间不划算
+
+	// console.log(globalLibBase);
+	// console.log(address);
 	b(globalLibBase.add(address), c => {
 		ls(c);
 	});
 
-	console.log('SetBreakpoint -> {lib:' + globalLibName + ',address:' + address + '}');
+	console.log('SetBreakpoint -> {lib : ' + globalLibName + ',offset : 0x' + address.toString(16) + '}');
 }
 
 rpc.exports.deleteBreakpoint = address => {
@@ -220,7 +235,7 @@ function showAllso(user, output) {
 }
 
 let globalWatchLibName; let globalWatchLibRange;
-rpc.exports.watchMemory = (watchLibName, length , offset) => {
+rpc.exports.watchMemory = (watchLibName, length, offset) => {
 	try {
 		watchMemory(watchLibName, length, offset);
 	} catch (error) {
@@ -229,32 +244,33 @@ rpc.exports.watchMemory = (watchLibName, length , offset) => {
 	}
 };
 
-//w libttheif_dec.so
-function watchMemory(watchLibName, length,offset) {
+// W libttheif_dec.so
+function watchMemory(watchLibName, length, offset) {
 	const lib = Process.getModuleByName(watchLibName);
-	var _len = length;
+	let _length = length;
 	if (length == null) {
-		_len = lib.size;
+		_length = lib.size;
 		// Watch .text memory ->
 		// offset = objdump -h libxxx.so | grep .text | awk '{print $4}'
 		// length = objdump -h libxxx.so | grep .text | awk '{print $3}'
 	} else {
-		_len = Number.parseInt(length);
+		_length = Number.parseInt(length);
 	}
-	//console.log(watchLibName + length + offset);
+
+	// Console.log(watchLibName + length + offset);
 	unWatchMemory(); // Detecation befor whether live watchMemory
-	var baseAddressPointer = lib.base;
+	let baseAddressPointer = lib.base;
 	if (length == null) {
-		//Auto find maximum size
-		var auto_grow_step = 0;
-		while(true){
-			try{
+		// Auto find maximum size
+		let auto_grow_step = 0;
+		while (true) {
+			try {
 				auto_grow_step += 0x30;
-				_watchMemory(baseAddressPointer, _len -= auto_grow_step);
+				_watchMemory(baseAddressPointer, _length -= auto_grow_step);
 				break;
-			}catch(e){
-				//console.log(auto_grow_step);
-				console.log("Auto change length -> 0x" + _len.toString(16));
+			} catch {
+				// Console.log(auto_grow_step);
+				console.log('Auto change length -> 0x' + _length.toString(16));
 			}
 		}
 	}
@@ -262,11 +278,12 @@ function watchMemory(watchLibName, length,offset) {
 	if (offset != undefined && offset != null && offset != 0) {
 		baseAddressPointer = baseAddressPointer.add(offset);
 	}
-	_watchMemory(baseAddressPointer, _len);
+
+	_watchMemory(baseAddressPointer, _length);
 
 	globalWatchLibName = watchLibName;
-	globalWatchLibRange = '[ ' + baseAddressPointer + ' - ' + baseAddressPointer.add(_len) + ' ]';
-	console.log('Watchmemory -> { name : ' + globalWatchLibName + ',range : ' + globalWatchLibRange + ',size : 0x' + _len.toString(16));
+	globalWatchLibRange = '[ ' + baseAddressPointer + ' - ' + baseAddressPointer.add(_length) + ' ]';
+	console.log('Watchmemory -> { name : ' + globalWatchLibName + ',range : ' + globalWatchLibRange + ',size : 0x' + _length.toString(16));
 }
 
 // 监控内存数据

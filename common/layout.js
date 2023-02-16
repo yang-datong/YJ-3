@@ -35,8 +35,8 @@ rpc.exports.init = mjson => {
 
 // --------------------- Initialized variables ----------------------
 const message_tag = ' log ';
-const _width = 70;
 let step; let arch;
+var isAutoShowView = true;
 var globalContext, globalLibName, globalLibBase, globalBreakpoint, globalLibPath;
 // Var globalContext, globalLibName, globalLibBase, globalBreakpoint, globalLibPath;
 

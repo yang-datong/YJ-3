@@ -6,7 +6,7 @@ import readline
 
 
 class Interaction:
-    RE_MATH_EVAL = '(0x)?[0-9a-z]{4,16}(\+|\-)\d'
+    RE_MATH_EVAL = '(0x)?[0-9A-Fa-f]{1,16}(\+|\-)\d'
     LOGO = RED("\nYJ ➤ ")
 
     def __init__(self, device, script, spawn_model, pid):
@@ -39,6 +39,8 @@ class Interaction:
                 self.resume_process()
             elif (cmd == "main" or cmd == "m"):
                 self.show_all_view()
+            elif (cmd == "kill" or cmd == "k"):
+                self.stop_auto_show_view()
             elif (cmd == "lib" or cmd == "so"):
                 self.libc_base_address()
             elif (cmd == "trace" or cmd == "t"):
@@ -69,9 +71,9 @@ class Interaction:
                 self.write_file(argv)
             elif (cmd == "hookfunction" or cmd == "hf"):
                 self.hook_function(argv)
-            elif (re.match("!.*",cmd)):
+            elif (re.match("!.*", cmd)):
                 try:
-                    exec(cmd.replace("!",""))
+                    exec(cmd.replace("!", ""))
                 except Exception as e:
                     print(e)
             else:
@@ -79,7 +81,6 @@ class Interaction:
 
 
 # -------------------- Call JavaScript function --------------------
-
 
     def resume_process(self):
         if self.spawn_model == True:
@@ -92,28 +93,27 @@ class Interaction:
             print(argv[0] + " format error, try exec \"help\"")
             return
         address = argv[1]
-        if (not re.match(Interaction.RE_MATH_EVAL, address) is None):
+        if re.match(Interaction.RE_MATH_EVAL, address):
             address = str(hex(eval(address)))
         self.script.exports.telescope(address)
 
-    def into_expr(self,argv):
+    def into_expr(self, argv):
         if len(argv) < 4:
             print(argv[0] + " format error, try exec \"help\"")
             return
         try:
-            #print(argv[1] + argv[2] + argv[3])
+            # print(argv[1] + argv[2] + argv[3])
             address = eval(argv[1] + argv[2] + argv[3])
             print(address)
         except Exception as e:
             print(e)
-
 
     def print_address(self, argv, carry=10):
         if len(argv) == 1:
             print(argv[0] + " format error, try exec \"help\"")
             return
         address = argv[1]
-        if (not re.match(Interaction.RE_MATH_EVAL, address) is None):
+        if re.match(Interaction.RE_MATH_EVAL, address):
             address = str(hex(eval(address)))
         value = self.script.exports.read_pointer(address)
         if value == 0:
@@ -128,7 +128,7 @@ class Interaction:
             print(argv[0] + " format error, try exec \"help\"")
             return
         address = argv[1]
-        if (not re.match(Interaction.RE_MATH_EVAL, address) is None):
+        if re.match(Interaction.RE_MATH_EVAL, address):
             address = str(hex(eval(address)))
         if len(argv) > 2:
             targetLibName = argv[2]
@@ -136,16 +136,16 @@ class Interaction:
         else:
             self.script.exports.set_breakpoint(address)
 
-    #Just only one argument -> as much as possible more memory
-    #Live two arguments -> [libName] [start-end] #start > 0 , end<size
-    #Live three arguments -> [libName] [start] [end] #start > 0 , end<size
+    # Just only one argument -> as much as possible more memory
+    # Live two arguments -> [libName] [start-end] #start > 0 , end<size
+    # Live three arguments -> [libName] [start] [end] #start > 0 , end<size
     def watch_memory(self, argv):
         if len(argv) == 1:
             print(argv[0] + " format error, try exec \"help\"")
             return
         elif len(argv) == 2:
             targetLibName = argv[1]
-            self.script.exports.watch_memory(targetLibName,None)
+            self.script.exports.watch_memory(targetLibName, None)
         elif len(argv) == 3:
             targetLibName = argv[1]
             HEX_OR_DEC_MATH = '(0x)?[0-9A-Fa-f]{1,16}-(0x)?[0-9A-Fa-f]{1,16}'
@@ -158,7 +158,8 @@ class Interaction:
             if (offset < 0 or length <= 0):
                 print("Format error")
                 return
-            self.script.exports.watch_memory(targetLibName,str(length),str(offset))
+            self.script.exports.watch_memory(
+                targetLibName, str(length), str(offset))
         elif len(argv) == 4:
             targetLibName = argv[1]
             offset = self.toAddress(argv[2])
@@ -166,10 +167,10 @@ class Interaction:
             if (offset < 0 or length <= 0):
                 print("Format error")
                 return
-            self.script.exports.watch_memory(targetLibName,str(length),str(offset))
+            self.script.exports.watch_memory(
+                targetLibName, str(length), str(offset))
 
-
-    def toAddress(self,string):
+    def toAddress(self, string):
         HEX_MATH = '0x[0-9A-Fa-f]{1,16}$'
         DEC_MATH = '\d{1,16}$'
         if (re.match(HEX_MATH, string)):
@@ -179,8 +180,7 @@ class Interaction:
         else:
             print("Format error as -> 0-0xfxxxx")
             return -1
-        return int(string,int_type)
-
+        return int(string, int_type)
 
     def un_watch_memory(self):
         self.script.exports.un_watch_memory()
@@ -250,7 +250,7 @@ class Interaction:
             return
         address = argv[1]
         coding = "utf8"
-        if (not re.match(Interaction.RE_MATH_EVAL, address) is None):
+        if re.match(Interaction.RE_MATH_EVAL, address):
             address = str(hex(eval(address)))
         if len(argv) > 2:
             coding = argv[2]
@@ -262,6 +262,10 @@ class Interaction:
 
     def show_all_view(self):
         self.script.exports.show_all_view()
+
+    def stop_auto_show_view(self):
+        self.script.exports.stop_auto_show_view()
+        print(GREEN("Kill Success"))
 
     def libc_base_address(self):
         address = self.script.exports.libc_base_address()
@@ -280,15 +284,11 @@ class Interaction:
             return
         address = argv[1]
         size = 0x30
-        if (not re.match(Interaction.RE_MATH_EVAL, address) is None):
+        if re.match(Interaction.RE_MATH_EVAL, address):
             address = str(hex(eval(address)))
-        if (len(argv) > 2):
+        if len(argv) > 2:
             size = argv[2]
-            try:
-                size = int(size, 10)
-            except:
-                size = int(size, 16)
-
+            size = self.toAddress(size)
         value = self.script.exports.hexdump(address, size)
 
     MENU = '''
@@ -307,6 +307,7 @@ class Interaction:
 ------- YJ ---------
         r|run                                   Continue spawn model attach
         m|main                                  Display all view
+        k|kill                                  Disable auto display all view
         p [pointer]                             Display pointer value
         x [pointer]                             Display pointer hexadecimal value
         expr [calculation expression]           Calculation expression result
