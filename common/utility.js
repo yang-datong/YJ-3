@@ -214,22 +214,49 @@ rpc.exports.readString = function (address, coding) {
 	return string_;
 };
 
+
+let glabloMapSOCache = null;
+rpc.exports.isLiveCacheMapSO = (addressPointer) => {
+	try{
+		return findCacheMapSO(addressPointer);
+	}catch(e){
+		console.log(e);
+		return null;
+	}
+
+}
+function findCacheMapSO(addressPointer) {
+	addressPointer = new NativePointer(addressPointer)
+	let obj = glabloMapSOCache.find(addressPointer)
+	if (obj != null) {
+		return obj.name
+	}
+	return null
+}
+
+function initalizationMapSO() {
+	glabloMapSOCache = new ModuleMap((module)=>{
+		return module.path.startsWith('/data')
+	});
+	//let obj = glabloMapSOCache.values()
+	//send(obj)
+}
+
 rpc.exports.showAllso = (user, output) => showAllso(user, output);
 function showAllso(user, output) {
+	initalizationMapSO(); //Save module into cache map
+
 	let list_name = '';
-	Process.enumerateModules({
+	Process.enumerateModules({  //TODO 这边也有性能问题 和上面ModuleMap 重复探测了。。。。以后改 2023-02-17 20:46
 		onMatch(so) {
 			const path = so.path;
 			if (user) {
 				if (path.includes('/data/app/')) {
-					//list_name += output == undefined || output == true ? so.path + ',' : so.name + ' -> {size : 0x' + so.size.toString(16) + '. base : 0x' + so.base.toString(16) + '}' + ',';
 					list_name += output == undefined || output == true ? JSON.stringify(so.path) + " " : JSON.stringify({name:so.name ,size:so.size.toString(16) ,base:so.base.toString(16)}) + " "
 				}
 			} else if (output == undefined || output == true) {
-				//list_name += so.path + ',';
 				list_name += JSON.stringify(so.path) + " ";
 			} else {
-				//list_name += so.name + ' -> {size : 0x' + so.size.toString(16) + '. base : 0x' + so.base.toString(16) + '}' + ',';
 				list_name += JSON.stringify({name:so.name , size:so.size.toString(16) , base:so.base.toString(16)}) + " ";
 			}
 		}, onComplete() {},
@@ -247,7 +274,6 @@ rpc.exports.watchMemory = (watchLibName, length, offset) => {
 	}
 };
 
-// W libttheif_dec.so
 function watchMemory(watchLibName, length, offset) {
 	const lib = Process.getModuleByName(watchLibName);
 	let _length = length;
@@ -435,4 +461,17 @@ function javaHookClassAllFunctions(pack) {
 			};
 		}
 	}
+}
+
+
+function demo(argument) {
+	Module.enumerateExportsSync('library.so')
+		.filter(x => x.name.startsWith('_Z'))
+		.forEach(x => {
+			Interceptor.attach(x.address, {
+				onEnter: function (args) {
+					console.log('[-] ' + demangle(x.name));
+				}
+			});
+		});
 }

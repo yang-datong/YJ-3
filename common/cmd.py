@@ -6,7 +6,10 @@ import readline
 
 
 class Interaction:
+    #EVAL_MTH = '(0x)?[0-9A-Fa-f]{1,16}(\+|\-)\d'
     EVAL_MTH = '(0x)?[0-9A-Fa-f]{1,16}(\+|\-)\d'
+    #TODO  error -> 0xff+0xzxdqwwq ???
+
     LOGO = RED("\nYJ ➤ ")
 
     def __init__(self, device, script, spawn_model, pid):
@@ -36,6 +39,8 @@ class Interaction:
             elif (cmd == "pwd"):
                 os.system("pwd")
 # -------------------- Frida command --------------------
+#            elif (cmd == "mfind" or cmd == "mf"):
+#                self.script.exports.mfind(argv[1])
             elif (cmd == "run" or cmd == "r"):
                 self.resume_process()
             elif (cmd == "main" or cmd == "m"):
@@ -124,20 +129,20 @@ class Interaction:
         else:
             print(str(int(value, 16)))
 
-    def check_is_live_so_info_cache(self, address):
-        if not self.cache_all_so_json_fmt:
-            return None
-
-        # 这里有性能问题，以后改,现在要吃饭了2023-02-16 18:06
-        min = 0xffffffffffffffff  # max value
-        targetLibName = None
-        for j in self.cache_all_so_json_fmt:
-            it = json.loads(j)
-            n = abs(self.toAddress(address) - self.toAddress("0x"+it["base"]))
-            if n <= min:
-                min = n
-                targetLibName = it["name"]
-        return targetLibName
+#    def check_is_live_so_info_cache(self, address):
+#        if not self.cache_all_so_json_fmt:
+#            return None
+#
+#        # 这里有性能问题，以后改,现在要吃饭了2023-02-16 18:06
+#        min = 0xffffffffffffffff  # max value
+#        targetLibName = None
+#        for j in self.cache_all_so_json_fmt:
+#            it = json.loads(j)
+#            n = abs(self.toAddress(address) - self.toAddress("0x"+it["base"]))
+#            if n <= min:
+#                min = n
+#                targetLibName = it["name"]
+#        return targetLibName
 
     def set_breakpoint(self, argv):
         if len(argv) == 1:
@@ -150,11 +155,12 @@ class Interaction:
             # Check it belong to match , Fetch address
             if re.match(Interaction.EVAL_MTH, address):
                 address = str(hex(eval(address)))
+            targetLibName = self.script.exports.is_live_cache_map_s_o(address)
         if len(argv) > 2:
             targetLibName = argv[2]
-            if targetLibName == "*":
+            #if targetLibName == "*":
                 # Check it belong to match , Fetch address
-                targetLibName = self.check_is_live_so_info_cache(address)
+            #    targetLibName = self.check_is_live_so_info_cache(address)
         self.script.exports.set_breakpoint(address, targetLibName)
 
     # Just only one argument -> as much as possible more memory
