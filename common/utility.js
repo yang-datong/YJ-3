@@ -511,21 +511,34 @@ function getJNIFunc(argument) {
 }
 
 rpc.exports.writeFile = (content, fileName) => {
-	try {
-		writeFile(content, fileName);
-	} catch (error) {
-		console.log(error);
-	}
+	writeFile(content, fileName);
 };
 
 // Save data to file
 function writeFile(content, fileName) {
-	fileName = '/sdcard/' + fileName;
-	const file = new File(fileName, 'w+');
-	file.write(content);
-	file.flush();
-	file.close();
-	send('-----> save: ' + fileName + ' is done!! <------');
+	if(fileName == undefined || fileName == null){
+		var currentdate = new Date();
+		fileName = '/sdcard/YJ-'+ currentdate.getDate() + "-"
+                 + (currentdate.getMonth()+1)  + "-"
+                 + currentdate.getFullYear() + "-"
+                 + currentdate.getHours() + "-"
+                 + currentdate.getMinutes() + "-"
+                 + currentdate.getSeconds() + ".dat";
+	}
+	let file = null;
+	try{
+		file = new File(fileName, 'wb');
+		file.write(content);
+		file.flush();
+		file.close();
+		send('-----> save: ' + fileName + ' is done!! <------');
+	}catch(e){
+		console.log(e + " -> " + fileName);
+		if (file) {
+			file.flush();
+			file.close();
+		}
+	}
 }
 
 rpc.exports.javaHookClassAllFunctions = pack => {

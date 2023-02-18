@@ -41,8 +41,8 @@ class Interaction:
             elif (cmd == "pwd"):
                 os.system("pwd")
 # -------------------- Frida command --------------------
-#            elif (cmd == "c" or cmd == "cc"):
-#                self.script.exports.c(argv[1])
+            elif (cmd == "c" or cmd == "cc"):
+                self.script.exports.c(argv[1])
             elif (cmd == "run" or cmd == "r"):
                 self.resume_process()
             elif (cmd == "main" or cmd == "m"):
@@ -245,12 +245,13 @@ class Interaction:
         self.script.exports.un_watch_memory()
 
     def write_file(self, argv):
-        if len(argv) < 3:
-            print(
-                "Need [content] and [filename](output file default in /sdcard/xxx)")
+        if len(argv) == 1:
+            print(argv[0] + " format error, try exec \"help\"")
             return
         content = argv[1]
-        fileName = argv[2]
+        fileName = None
+        if len(argv) == 1:
+            fileName = argv[2]
         self.script.exports.write_file(content, fileName)
 
     def hook_function(self, argv):
@@ -422,7 +423,7 @@ MENU = '''
         d|delete [breakpoint]                   Delete break address
         w|watch [address]                       Monitor target memory space. callback snooping exists
         uw|unwatch [address]                    Disable monitor target memory space(default disable all monitor)
-        wf|writefile [content] [filename]       Write memory data to a file(output file in phone -> /sdcard/xxx , ensure that the process has permissions)
+        wf|writefile [content] [filename]       Write memory data to a file(default output file in phone -> /sdcard/yj.dat , ensure that the process has permissions)
         hf|hookfunction                         Hook all functions of a single class in the java level
         expr [calculation expression]           Calculation expression result
     '''
