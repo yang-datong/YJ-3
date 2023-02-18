@@ -214,50 +214,82 @@ rpc.exports.readString = function (address, coding) {
 	return string_;
 };
 
-
 let glabloMapSOCache = null;
-rpc.exports.isLiveCacheMapSO = (addressPointer) => {
-	try{
+rpc.exports.isLiveCacheMapSO = addressPointer => {
+	try {
 		return findCacheMapSO(addressPointer);
-	}catch(e){
-		console.log(e);
+	} catch (error) {
+		console.log(error);
+		return null;
+	}
+};
+
+function findCacheMapSO(addressPointer) {
+	if (glabloMapSOCache == null) {
 		return null;
 	}
 
-}
-function findCacheMapSO(addressPointer) {
-	addressPointer = new NativePointer(addressPointer)
-	let obj = glabloMapSOCache.find(addressPointer)
-	if (obj != null) {
-		return obj.name
+	addressPointer = new NativePointer(addressPointer);
+	const object = glabloMapSOCache.find(addressPointer);
+	if (object != null) {
+		return object.name;
 	}
-	return null
+
+	return null;
 }
 
-function initalizationMapSO() {
-	glabloMapSOCache = new ModuleMap((module)=>{
-		return module.path.startsWith('/data')
-	});
-	//let obj = glabloMapSOCache.values()
-	//send(obj)
+function initalizationMapSO(_isUser) {
+	let isUser = null;
+	if (_isUser == undefined || _isUser == null) {
+		isUser = true;
+	}
+
+	if (isUser) { // 这里的判断防止不必要性能开销
+		glabloMapSOCache = new ModuleMap(module =>
+			 module.path.startsWith('/data'), // Hot call
+		);
+	} else {
+		glabloMapSOCache = new ModuleMap();
+	}
+//	DisplayCurrentMapSo()
 }
+
+function displayCurrentMapSo() {
+	if (glabloMapSOCache != null) {
+		send(glabloMapSOCache.values());
+	} else {
+		console.log('No cache');
+	}
+}
+
+rpc.exports.updateMapSO = () => updateMapSO();
+function updateMapSO() {
+	if (glabloMapSOCache != null) {
+		// Console.log("update");
+		glabloMapSOCache.update();
+  	// DisplayCurrentMapSo()
+	}
+}
+
+initalizationMapSO(); // Save module into cache map so
 
 rpc.exports.showAllso = (user, output) => showAllso(user, output);
 function showAllso(user, output) {
-	initalizationMapSO(); //Save module into cache map
-
 	let list_name = '';
-	Process.enumerateModules({  //TODO 这边也有性能问题 和上面ModuleMap 重复探测了。。。。以后改 2023-02-17 20:46
+
+	updateMapSO(); // Update current cache map so
+
+	Process.enumerateModules({ // TODO 这边也有性能问题 和上面ModuleMap 重复探测了。。。。以后改 2023-02-17 20:46
 		onMatch(so) {
 			const path = so.path;
 			if (user) {
 				if (path.includes('/data/app/')) {
-					list_name += output == undefined || output == true ? JSON.stringify(so.path) + " " : JSON.stringify({name:so.name ,size:so.size.toString(16) ,base:so.base.toString(16)}) + " "
+					list_name += output == undefined || output == true ? JSON.stringify(so.path) + ' ' : JSON.stringify({name: so.name, size: so.size.toString(16), base: so.base.toString(16)}) + ' ';
 				}
 			} else if (output == undefined || output == true) {
-				list_name += JSON.stringify(so.path) + " ";
+				list_name += JSON.stringify(so.path) + ' ';
 			} else {
-				list_name += JSON.stringify({name:so.name , size:so.size.toString(16) , base:so.base.toString(16)}) + " ";
+				list_name += JSON.stringify({name: so.name, size: so.size.toString(16), base: so.base.toString(16)}) + ' ';
 			}
 		}, onComplete() {},
 	});
@@ -394,6 +426,57 @@ function getImportFunc(libName) {
 	console.log('\n}');
 }
 
+rpc.exports.findApiByFunc = (reName, funcType, justAddress) => {
+	try {
+		const api = findApiByFunc(reName, funcType, justAddress);
+		if (api != null) {
+			if (justAddress != undefined && justAddress == true) {
+				return api[1]; // Address
+			}
+
+			return api;
+		}
+	} catch (error) {
+		console.log(error);
+	}
+
+	return null;
+};
+
+function findApiByFunc(reName, funcType, justAddress) {
+	// Console.log("reName->"+reName);
+	// console.log("funcType->"+funcType);
+	const resolver = new ApiResolver('module');
+	// Const matches = resolver.enumerateMatches('exports:*!open*');
+	const matches = resolver.enumerateMatches(funcType + ':*!' + reName);
+	// Const first = matches[0];
+	// send(first)
+	//
+	const count = matches.length;
+	if (count == 0) {
+		console.log('Not find match function -> ' + reName);
+		return null;
+	}
+
+	if (count != 1) {
+		send('Find to multiple -> ');
+		for (const element of matches) {
+			console.log('name -> "' + element.name + '", address -> "' + element.address + '"\n');
+		}
+
+		return null;
+	}
+
+	// Reduce deliver volume of memory , Only return here :'name' and 'address'
+	const name = matches[0].name;
+	const address = matches[0].address;
+	if (!justAddress) {
+		console.log('name -> "' + name + '", address -> "' + address + '"');
+	}
+
+	return [name, address];
+}
+
 rpc.exports.getJNIFunc = () => {
 	try {
 		getJNIFunc();
@@ -408,11 +491,22 @@ function getJNIFunc() {
 	for (const it of symbols) {
 		const name = it.name;
 		if (name.includes('JNI')
-//				&& !name.includes('CheckJNI')
-				&& name.includes('art') ){
-//				&& name.includes('GetStringUTFChars')) {
+		//				&& !name.includes('CheckJNI')
+				&& name.includes('art')) {
+			//				&& name.includes('GetStringUTFChars')) {
 			console.log(name);
 		}
+	}
+}
+
+function getJNIFunc(argument) {
+	for (const x of Module.enumerateExportsSync('library.so')
+		.filter(x => x.name.startsWith('_Z'))) {
+		Interceptor.attach(x.address, {
+			onEnter(args) {
+				console.log('[-] ' + demangle(x.name));
+			},
+		});
 	}
 }
 
@@ -463,15 +557,8 @@ function javaHookClassAllFunctions(pack) {
 	}
 }
 
-
-function demo(argument) {
-	Module.enumerateExportsSync('library.so')
-		.filter(x => x.name.startsWith('_Z'))
-		.forEach(x => {
-			Interceptor.attach(x.address, {
-				onEnter: function (args) {
-					console.log('[-] ' + demangle(x.name));
-				}
-			});
-		});
+function catchError() {
+	Process.setExceptionHandler(details => {
+	  console.log(details);
+	});
 }

@@ -3,29 +3,31 @@ from common.layout import *
 import sys
 import readline
 # ------------------------ Interaction Model ------------------------
+RE_EVAL_EXPRESS = '(0x)?[0-9A-Fa-f]{1,16}(-|\+)(0x)?[0-9A-Fa-f]{1,16}$'
+RE_FUNCTION_EXPRESS = '(\*)?[a-zA-Z]+'
+
+LOGO = RED("\nYJ ➤ ")
 
 
 class Interaction:
-    #EVAL_MTH = '(0x)?[0-9A-Fa-f]{1,16}(\+|\-)\d'
-    EVAL_MTH = '(0x)?[0-9A-Fa-f]{1,16}(\+|\-)\d'
-    #TODO  error -> 0xff+0xzxdqwwq ???
-
-    LOGO = RED("\nYJ ➤ ")
 
     def __init__(self, device, script, spawn_model, pid):
         self.device = device
         self.script = script
         self.spawn_model = spawn_model
         self.pid = pid
-        self.cache_all_so_json_fmt = None
+        # self.cache_all_so_json_fmt = None
 
     def start(self):
         while True:
-            cmd = input(Interaction.LOGO)
+            cmd = input(LOGO)
             if (cmd == "" or cmd.isspace()):
                 continue
             elif (cmd == "help" or cmd == "h"):
-                print(self.MENU)
+                print(MENU)
+                continue
+            elif (cmd == "version" or cmd == "v"):
+                print("Current version -> " + GREEN("YJ-3"))
                 continue
             argv = cmd.split()
             cmd = argv[0]
@@ -39,54 +41,57 @@ class Interaction:
             elif (cmd == "pwd"):
                 os.system("pwd")
 # -------------------- Frida command --------------------
-#            elif (cmd == "mfind" or cmd == "mf"):
-#                self.script.exports.mfind(argv[1])
+#            elif (cmd == "c" or cmd == "cc"):
+#                self.script.exports.c(argv[1])
             elif (cmd == "run" or cmd == "r"):
                 self.resume_process()
             elif (cmd == "main" or cmd == "m"):
                 self.show_all_view()
             elif (cmd == "kill" or cmd == "k"):
                 self.stop_auto_show_view()
-            elif (cmd == "lib" or cmd == "so"):
-                self.libc_base_address()
             elif (cmd == "trace" or cmd == "t"):
                 self.trace(argv)
-            elif (cmd == "expr"):
-                self.into_expr(argv)
             elif (cmd == "print" or cmd == "p"):
                 self.print_address(argv, 10)
             elif (cmd == "hex" or cmd == "x"):
                 self.print_address(argv, 16)
-            elif (cmd == "telescope" or cmd == "tele"):
-                self.telescope(argv)
             elif (cmd == "string" or cmd == "s"):
                 self.read_String(argv)
+            elif (cmd == "hexdump" or cmd == "hd"):
+                self.hexdump(argv)
+            elif (cmd == "telescope" or cmd == "tele"):
+                self.telescope(argv)
+            elif (cmd == "lib" or cmd == "so"):
+                self.libc_base_address()
+            elif (cmd == "find" or cmd == "f"):
+                self.find_api_by_func(argv)
             elif (cmd == "breakpoints" or cmd == "b"):
                 self.set_breakpoint(argv)
-            elif (cmd == "delete" or cmd == "d"):
-                self.delete_breakpoint(argv)
             elif (cmd == "info" or cmd == "i"):
                 self.display_info_list_type(argv)
+            elif (cmd == "delete" or cmd == "d"):
+                self.delete_breakpoint(argv)
             elif (cmd == "watch" or cmd == "w"):
                 self.watch_memory(argv)
             elif (cmd == "unwatch" or cmd == "uw"):
                 self.un_watch_memory()
-            elif (cmd == "hexdump" or cmd == "hd"):
-                self.hexdump(argv)
             elif (cmd == "writefile" or cmd == "wf"):
                 self.write_file(argv)
             elif (cmd == "hookfunction" or cmd == "hf"):
                 self.hook_function(argv)
+            elif (cmd == "expr"):
+                self.into_expr(argv)
             elif (re.match("!.*", cmd)):
-                try:
-                    exec(cmd.replace("!", ""))
-                except Exception as e:
-                    print(e)
+                self.exec_python(cmd)
             else:
                 print("Option does not exist : \"%s\".  Try \"help\"" % cmd)
 
-
 # -------------------- Call JavaScript function --------------------
+    def exec_python(self, cmd):
+        try:
+            exec(cmd.replace("!", ""))
+        except Exception as e:
+            print(e)
 
     def resume_process(self):
         if self.spawn_model == True:
@@ -99,7 +104,7 @@ class Interaction:
             print(argv[0] + " format error, try exec \"help\"")
             return
         address = argv[1]
-        if re.match(Interaction.EVAL_MTH, address):
+        if re.match(RE_EVAL_EXPRESS, address):
             address = str(hex(eval(address)))
         self.script.exports.telescope(address)
 
@@ -108,7 +113,6 @@ class Interaction:
             print(argv[0] + " format error, try exec \"help\"")
             return
         try:
-            # print(argv[1] + argv[2] + argv[3])
             address = eval(argv[1] + argv[2] + argv[3])
             print(address)
         except Exception as e:
@@ -119,7 +123,7 @@ class Interaction:
             print(argv[0] + " format error, try exec \"help\"")
             return
         address = argv[1]
-        if re.match(Interaction.EVAL_MTH, address):
+        if re.match(RE_EVAL_EXPRESS, address):
             address = str(hex(eval(address)))
         value = self.script.exports.read_pointer(address)
         if value == 0:
@@ -128,6 +132,21 @@ class Interaction:
             print(address + " -> " + value)
         else:
             print(str(int(value, 16)))
+
+    def find_api_by_func(self, argv):
+        if len(argv) == 1:
+            print(argv[0] + " format error, try exec \"help\"")
+            return
+        reName = argv[1]
+        funcType = "exports"
+        self.script.exports.find_api_by_func(reName, funcType)
+
+    def find_address_by_func(self, reName):
+        funcType = "exports"
+        self.script.exports.update_map_s_o()  # Update Cache Map so
+        address = self.script.exports.find_api_by_func(reName, funcType, True)
+        return address
+
 
 #    def check_is_live_so_info_cache(self, address):
 #        if not self.cache_all_so_json_fmt:
@@ -144,23 +163,35 @@ class Interaction:
 #                targetLibName = it["name"]
 #        return targetLibName
 
+
     def set_breakpoint(self, argv):
         if len(argv) == 1:
             print(argv[0] + " format error, try exec \"help\"")
             return
 
-        address = argv[1]
+        address = None
         targetLibName = None
         if len(argv) == 2:
-            # Check it belong to match , Fetch address
-            if re.match(Interaction.EVAL_MTH, address):
-                address = str(hex(eval(address)))
+            # Check it belong to eval expression -> Calculate address
+            if re.match(RE_EVAL_EXPRESS, argv[1]):
+                # address = str(hex(eval(argv[1])))
+                address = str(eval(argv[1]))
+            # Check it belong to function name -> Fetch address
+            elif re.match(RE_FUNCTION_EXPRESS, argv[1]):
+                address = self.find_address_by_func(argv[1])
+            else:
+                address = argv[1]
+
+            if address is None or address == 0:
+                print("Address fotmat error")
+                return
+
             targetLibName = self.script.exports.is_live_cache_map_s_o(address)
+
         if len(argv) > 2:
+            address = argv[1]
             targetLibName = argv[2]
-            #if targetLibName == "*":
-                # Check it belong to match , Fetch address
-            #    targetLibName = self.check_is_live_so_info_cache(address)
+
         self.script.exports.set_breakpoint(address, targetLibName)
 
     # Just only one argument -> as much as possible more memory
@@ -176,8 +207,8 @@ class Interaction:
             self.script.exports.watch_memory(targetLibName, None)
         elif len(argv) == 3:
             targetLibName = argv[1]
-            HEX_OR_DEC_MATH = '(0x)?[0-9A-Fa-f]{1,16}-(0x)?[0-9A-Fa-f]{1,16}'
-            if (not re.match(HEX_OR_DEC_MATH, argv[2])):
+            HEX_OR_RE_DEC_EXPRESS = '(0x)?[0-9A-Fa-f]{1,16}-(0x)?[0-9A-Fa-f]{1,16}'
+            if (not re.match(HEX_OR_RE_DEC_EXPRESS, argv[2])):
                 print("Format error as -> [start]-[end]")
                 return
             sp = argv[2].split('-')
@@ -199,11 +230,11 @@ class Interaction:
                 targetLibName, str(length), str(offset))
 
     def toAddress(self, string):
-        HEX_MATH = '0x[0-9A-Fa-f]{1,16}$'
-        DEC_MATH = '\d{1,16}$'
-        if (re.match(HEX_MATH, string)):
+        RE_HEX_EXPRESS = '0x[0-9A-Fa-f]{1,16}$'
+        RE_DEC_EXPRESS = '\d{1,16}$'
+        if (re.match(RE_HEX_EXPRESS, string)):
             int_type = 16
-        elif (re.match(DEC_MATH, string)):
+        elif (re.match(RE_DEC_EXPRESS, string)):
             int_type = 10
         else:
             print("Format error as -> 0-0xfxxxx")
@@ -258,7 +289,8 @@ class Interaction:
             return
 
         _json = sorted(json_str.split())
-        self.cache_all_so_json_fmt = _json
+        # self.cache_all_so_json_fmt = _json
+        print("User lib.so ->")
         for j in _json:
             it = json.loads(j)
             print(
@@ -301,7 +333,7 @@ class Interaction:
             return
         address = argv[1]
         self.script.exports.delete_breakpoint(address)
-        print(GREEN("Cleaed all breakPointer"))
+        print(GREEN("Cleared all breakPointer"))
 
     def read_String(self, argv):
         if len(argv) == 1:
@@ -309,7 +341,7 @@ class Interaction:
             return
         address = argv[1]
         coding = "utf8"
-        if re.match(Interaction.EVAL_MTH, address):
+        if re.match(RE_EVAL_EXPRESS, address):
             address = str(hex(eval(address)))
         if len(argv) > 2:
             coding = argv[2]
@@ -343,49 +375,54 @@ class Interaction:
             return
         address = argv[1]
         size = 0x30
-        if re.match(Interaction.EVAL_MTH, address):
+        if re.match(RE_EVAL_EXPRESS, address):
             address = str(hex(eval(address)))
         if len(argv) > 2:
             size = argv[2]
             size = self.toAddress(size)
         value = self.script.exports.hexdump(address, size)
 
-    MENU = '''
+
+MENU = '''
     Usage : [options] [value] [--]
 
         Options:
 
-------- SHELL ------
+-------------------------------- SHELL -------------------------------
         h|help                                  Display this message
         v|version                               Display script version
-        q|quit                                  Exit frida
+        q|quit                                  Exit YJ
         cl|clear                                Clean screen
         ls                                      Display current list
+        pwd                                     Display current path
         ![python]                               Exec python code
 
-------- YJ ---------
+-------------------------------- YJ ----------------------------------
         r|run                                   Continue spawn model attach
         m|main                                  Display all view
         k|kill                                  Disable auto display all view
-        p [pointer]                             Display pointer value
-        x [pointer]                             Display pointer hexadecimal value
-        expr [calculation expression]           Calculation expression result
-        b|breakpoint [address] [targetLibName]  Add target lib and break point
-        b|breakpoint [address]                  Add target lib and break point(Attach last time add target lib)
-        b|breakpoint [address] *                Add target lib and break point(Automatic detection)
-        t|trace [accurate/fuzzy]                Display called function list(default fuzzy)
-        so|lib                                  Print current target dynamic library base address
-        i|info [b|breakpoints]                  Print current all break pointer
+        t|trace [accurate/fuzzy]                Display called function list view(default accurate)
+        p|print [pointer]                       Display pointer value
+        x|hex [pointer]                         Display pointer hexadecimal value
+        s|string [pointer]                      Print target address character(default utf-8)
+        hd|hexdump [pointer]                    Display target memory space
+        tele|telescope [pointer]                Display multiple line memory space
+        lib|so                                  Print current target dynamic library base address
+        f|find [functionName]                   Find function source information by function name(support "*" wildcard character)
+        b|breakpoint [offset]                   Attach break point by lib offset address , must exist cache(default is the last used lib)
+        b|breakpoint [address]                  Attach break point by real address
+        b|breakpoint [functionName]             Attach break point by unique funcation name,support "*" wildcard character
+        b|breakpoint [offset] [targetLibName]   Attach break point by lib offset and libName
+        b|breakpoint [address] [targetLibName]  Attach break point by real address and libName
+        i|info [b|breakpoints]                  Print current all break address
         i|info [w|watch]                        Print all watch target
         i|info [so|lib]                         Print all loaded dynamic library
         i|info [f|fun] [lib name]               Print target lib all functions
         i|info [jni]                            Print all jni functions
-        d|delete [breakpoint]                   Delete break pointer
-        w|watch [pointer]                       Monitor target memory space. callback snooping exists
-        uw|unwatch                              Disable monitor target memory space(default disable all monitor)
-        hd|hexdump [pointer]                    Display target memory space
-        tele|telescope [pointer]                Display multiple line memory space
-        wf|writefile [content] [filename]       Display multiple line memory space
-        s|string [pointer]                      Print target address character(default utf-8)
+        d|delete [breakpoint]                   Delete break address
+        w|watch [address]                       Monitor target memory space. callback snooping exists
+        uw|unwatch [address]                    Disable monitor target memory space(default disable all monitor)
+        wf|writefile [content] [filename]       Write memory data to a file(output file in phone -> /sdcard/xxx , ensure that the process has permissions)
         hf|hookfunction                         Hook all functions of a single class in the java level
+        expr [calculation expression]           Calculation expression result
     '''
