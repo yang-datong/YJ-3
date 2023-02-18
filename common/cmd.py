@@ -245,14 +245,19 @@ class Interaction:
         self.script.exports.un_watch_memory()
 
     def write_file(self, argv):
-        if len(argv) == 1:
+        if len(argv) < 3:
             print(argv[0] + " format error, try exec \"help\"")
             return
-        content = argv[1]
+        startAddress = argv[1]
+        byteSize = argv[2]
         fileName = None
-        if len(argv) == 1:
-            fileName = argv[2]
-        self.script.exports.write_file(content, fileName)
+        if len(argv) > 3:
+            fileName = argv[3]
+        if self.toAddress(startAddress) == -1 or \
+                self.toAddress(byteSize) == -1:
+            print("such as -> writefile [startAddress] [buffSize]")
+            return
+        self.script.exports.write_file(startAddress,byteSize,fileName)
 
     def hook_function(self, argv):
         if len(argv) == 1:
@@ -423,7 +428,7 @@ MENU = '''
         d|delete [breakpoint]                   Delete break address
         w|watch [address]                       Monitor target memory space. callback snooping exists
         uw|unwatch [address]                    Disable monitor target memory space(default disable all monitor)
-        wf|writefile [content] [filename]       Write memory data to a file(default output file in phone -> /sdcard/yj.dat , ensure that the process has permissions)
+        wf|writefile [pointer] [size] [name]    Write memory data to a file(default output file in phone -> /sdcard/yj-[%time].dat , ensure that the process has permissions)
         hf|hookfunction                         Hook all functions of a single class in the java level
         expr [calculation expression]           Calculation expression result
     '''

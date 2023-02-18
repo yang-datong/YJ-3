@@ -510,8 +510,16 @@ function getJNIFunc(argument) {
 	}
 }
 
-rpc.exports.writeFile = (content, fileName) => {
-	writeFile(content, fileName);
+rpc.exports.writeFile = (startAddress,byteSize,fileName) => {
+	if (byteSize == 0) {
+		return;
+	}
+	try{
+		let buffer = Memory.readByteArray(new NativePointer(startAddress),Number.parseInt(byteSize));
+	writeFile(buffer, fileName);
+	}catch(e){
+		console.log(e);
+	}
 };
 
 // Save data to file
