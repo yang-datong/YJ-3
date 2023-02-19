@@ -24,5 +24,6 @@
    "color_format_value_yellow": "33",
    "color_format_value_bule": "34",
    "color_format_value_pink": "35",
-   "color_format_value_cyan": "36"
+   "color_format_value_cyan": "36",
+   "isAutoShowView":true
 }

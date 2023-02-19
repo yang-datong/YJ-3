@@ -191,6 +191,7 @@ def get_config_info():
     LayoutView.mjson = mjson
     LayoutView.end_line_len = mjson['end_line_len']
     LayoutView.code_show_row_number = mjson['code_show_row_number']
+    LayoutView.isAutoShowView = mjson['isAutoShowView']
     LayoutView.view_stack = mjson['view_stack']
     LayoutView.view_code = mjson['view_code']
     LayoutView.view_trace = mjson['view_trace']

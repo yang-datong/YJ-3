@@ -14,6 +14,7 @@ let TRACE_TAG;
 let REGISTER_TAG;
 let INIT_SEGMENT_ADDRESS_TAG;
 let TELE_SHOW_ROW_NUMBER;
+var isAutoShowView = true;
 
 // Use python dynamic initialize variables
 rpc.exports.init = mjson => {
@@ -31,12 +32,12 @@ rpc.exports.init = mjson => {
 	REGISTER_TAG = mjson.register_tag;
 	INIT_SEGMENT_ADDRESS_TAG = mjson.init_segment_address_tag;
 	TELE_SHOW_ROW_NUMBER = mjson.tele_show_row_number;
+	isAutoShowView = mjson.isAutoShowView;
 };
 
 // --------------------- Initialized variables ----------------------
 const message_tag = ' log ';
 let step; let arch;
-var isAutoShowView = true;
 var globalContext, globalLibName, globalLibBase, globalBreakpoint, globalLibPath;
 // Var globalContext, globalLibName, globalLibBase, globalBreakpoint, globalLibPath;
 

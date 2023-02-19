@@ -523,7 +523,7 @@ rpc.exports.writeFile = (startAddress,byteSize,fileName) => {
 };
 
 // Save data to file
-function writeFile(content, fileName) {
+function writeFile(content, fileName,opt) {
 	if(fileName == undefined || fileName == null){
 		var currentdate = new Date();
 		fileName = '/sdcard/YJ-'+ currentdate.getDate() + "-"
@@ -534,8 +534,13 @@ function writeFile(content, fileName) {
                  + currentdate.getSeconds() + ".dat";
 	}
 	let file = null;
+	let _opt = "wb"
 	try{
-		file = new File(fileName, 'wb');
+		if (opt != undefined || opt != null) {
+			_opt = opt;
+		}
+		console.log(_opt);
+		file = new File(fileName, _opt);
 		file.write(content);
 		file.flush();
 		file.close();
