@@ -4,6 +4,7 @@ import frida
 
 LAYOUT_SCRIPT_FILE = "common/layout.js"
 UTILITY_SCRIPT_FILE = "common/utility.js"
+SNAPSHOT_FILE = ".snapshot/YJ.snapshot"
 
 # -------------------------- Main --------------------------
 
@@ -35,6 +36,28 @@ def on_message(message, data):
         print(message)
 
 
+def saveSnapshot(process):
+    try:
+        config_files = [LAYOUT_SCRIPT_FILE, UTILITY_SCRIPT_FILE]
+        script = ''
+
+        for file in config_files:
+            with open(file, 'r') as f:
+                content = f.read()
+            script += content
+
+        snapshot = process.snapshot_script(
+            script, warmup_script="true", runtime="v8")
+        # Create local snapshot
+        print("Snapshot created! Size:", len(snapshot))
+        file = open(SNAPSHOT_FILE, 'wb')
+        file.write(snapshot)
+        file.close()
+    except Exception as e:
+        print("saveSnapshot() error" + e)
+        os.popen("bash common/md5.sh -c")
+
+
 def main(args):
     load_script = args.load
     app = args.app
@@ -51,19 +74,34 @@ def main(args):
         app = device.spawn(pack.replace('\n', ''))
 
     process = device.attach(app)
-    # process.enable_debugger() #V8 Upgrade to 10.x  -> function deprecation
+    # process.enable_debugger() #TODO
 
-    script = ''
-    files = [LAYOUT_SCRIPT_FILE, UTILITY_SCRIPT_FILE, load_script]
-    for file in files:
-        with open(file, 'r') as f:
-            content = f.read()
-        script += content
+    # Check to see if a local snapshot exists or if the snapshot has changed (md5 realize)
+    isChangeFile = os.popen(
+        "bash common/md5.sh " + LAYOUT_SCRIPT_FILE + " " + UTILITY_SCRIPT_FILE).readlines()[0]
 
-    script = process.create_script(script, runtime='v8')
+    if isChangeFile != "0":
+        # print("Change File call saveSnapshot()")
+        saveSnapshot(process)
+    # else:
+    #    print("Use before snapshot")
+
+    if os.path.isfile(SNAPSHOT_FILE):
+        # Live snapshot
+        with open(SNAPSHOT_FILE, "rb") as f:
+            _snapshot = f.read()
+    else:
+        saveSnapshot(process)
+        print(RED("Snapshot file is missing . Try again"))
+        exit(0)
+
+    with open(load_script, 'r') as f:
+        script = f.read()
+    f.close()
+
+    script = process.create_script(script, snapshot=_snapshot, runtime='v8')
     script.on('message', on_message)
     script.load()
-
     show_head_view_tips_info_color()
     script.exports.init(LayoutView.mjson)
 

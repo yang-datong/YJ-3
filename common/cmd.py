@@ -257,7 +257,7 @@ class Interaction:
                 self.toAddress(byteSize) == -1:
             print("such as -> writefile [startAddress] [buffSize]")
             return
-        self.script.exports.write_file(startAddress,byteSize,fileName)
+        self.script.exports.write_file(startAddress, byteSize, fileName)
 
     def hook_function(self, argv):
         if len(argv) == 1:
@@ -308,9 +308,24 @@ class Interaction:
             print(GREEN("watch info -> " + watch_info))
 
     def show_function(self, argv):
+        if len(argv) < 3:
+            print("Need [targetLibName]")
+            return
         libName = argv[2]
         self.script.exports.get_export_func(libName)
         self.script.exports.get_import_func(libName)
+
+    def show_debug_symbol(self, argv):
+        if len(argv) < 3:
+            print("Need [targetLibName|targetAddress]")
+            return
+        name = None
+        address = None
+        if self.toAddress(argv[2]) == -1:
+            name = argv[2]
+        else:
+            address = argv[2]
+        self.script.exports.show_debuf_symbol(address, name)
 
     def display_info_list_type(self, argv):
         if len(argv) == 1:
@@ -324,10 +339,9 @@ class Interaction:
         elif show_type == "w" or show_type == "watch":
             self.show_watchs()
         elif show_type == "f" or show_type == "function":
-            if len(argv) < 3:
-                print("Need [targetLibName]")
-                return
             self.show_function(argv)
+        elif show_type == "d" or show_type == "debugsymbol":
+            self.show_debug_symbol(argv)
         elif show_type == "jni":
             self.script.exports.get_j_n_i_func()
         else:
@@ -424,6 +438,7 @@ MENU = '''
         i|info [w|watch]                        Print all watch target
         i|info [so|lib]                         Print all loaded dynamic library
         i|info [f|fun] [lib name]               Print target lib all functions
+        i|info [d|debugsymbol] [name|address]   Print target debug symbol info
         i|info [jni]                            Print all jni functions
         d|delete [breakpoint]                   Delete break address
         w|watch [address]                       Monitor target memory space. callback snooping exists

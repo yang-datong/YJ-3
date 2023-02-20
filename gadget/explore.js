@@ -11,11 +11,7 @@ rpc.exports = {
 function main() {
 	// Enter
 
-
-
-
 }
-
 
 // ------------------------- Utility  -------------------------------
 function log(string_) {
@@ -24,30 +20,32 @@ function log(string_) {
 }
 
 // Save data to file
-function writeFile(content, fileName,opt) {
-	if(fileName == undefined || fileName == null){
-		var currentdate = new Date();
-		fileName = '/sdcard/YJ-'+ currentdate.getDate() + "-"
-                 + (currentdate.getMonth()+1)  + "-"
-                 + currentdate.getFullYear() + "-"
-                 + currentdate.getHours() + "-"
-                 + currentdate.getMinutes() + "-"
-                 + currentdate.getSeconds() + ".dat";
+function writeFile(content, fileName, opt) {
+	if (fileName == undefined || fileName == null) {
+		const currentdate = new Date();
+		fileName = '/sdcard/YJ-' + currentdate.getDate() + '-'
+                 + (currentdate.getMonth() + 1) + '-'
+                 + currentdate.getFullYear() + '-'
+                 + currentdate.getHours() + '-'
+                 + currentdate.getMinutes() + '-'
+                 + currentdate.getSeconds() + '.dat';
 	}
+
 	let file = null;
-	let _opt = "wb"
-	try{
+	let _opt = 'wb';
+	try {
 		if (opt != undefined || opt != null) {
 			_opt = opt;
 		}
+
 		console.log(_opt);
 		file = new File(fileName, _opt);
 		file.write(content);
 		file.flush();
 		file.close();
 		send('-----> save: ' + fileName + ' is done!! <------');
-	}catch(e){
-		console.log(e + " -> " + fileName);
+	} catch (error) {
+		console.log(error + ' -> ' + fileName);
 		if (file) {
 			file.flush();
 			file.close();

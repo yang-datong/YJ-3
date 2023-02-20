@@ -382,6 +382,7 @@ function unWatchMemory() {
 function jbacktracer() {
 	const back = Java.use('android.util.Log').getStackTraceString(Java.use('java.lang.Throwable').$new());
 	send('Java Stack -> :\n' + back);
+	//Use -> Java.backtrace()
 }
 
 rpc.exports.getExportFunc = libName => {
@@ -477,6 +478,26 @@ function findApiByFunc(reName, funcType, justAddress) {
 	return [name, address];
 }
 
+rpc.exports.showDebufSymbol = (address,name) => {
+	showDebufSymbol(address,name);
+}
+
+function showDebufSymbol(address,name) {
+	let symbol = null;
+	try{
+		if (address != undefined && address != null) {
+			symbol = DebugSymbol.fromAddress(ptr(address))
+		}else if (name != undefined && name != null) {
+			symbol = DebugSymbol.fromName(name)
+		}else{
+			symbol = "NULL"
+		}
+		send(symbol)
+	}catch(e){
+		console.log(e);
+	}
+}
+
 rpc.exports.getJNIFunc = () => {
 	try {
 		getJNIFunc();
@@ -552,6 +573,32 @@ function writeFile(content, fileName,opt) {
 			file.close();
 		}
 	}
+}
+
+
+function readFile(fileName,opt) {
+	if (fileName == undefined || fileName == null) {
+		fileName = '/etc/passwd'
+	}
+	const f = new File(fileName, 'r');
+	let line;
+	while ((line = f.readLine()) !== '') {
+		console.log(`Read line: ${line.trimEnd()}`);
+	}
+	//const text = File.readAllText('/etc/passwd');
+
+
+	if (opt != undefined && ope == "rb") {
+		const f = new File('/var/run/utmp', 'rb');
+		f.seek(0x2c); //use file offset
+		//const offset = f.tell();
+		//f.seek(7, File.SEEK_CUR);
+		//f.seek(-3, File.SEEK_END);
+		const data = f.readBytes(3);
+		const str = f.readText(3);
+	}
+
+	//const bytes = File.readAllBytes('/var/run/utmp');
 }
 
 rpc.exports.javaHookClassAllFunctions = pack => {
