@@ -64,7 +64,7 @@ def main(args):
     script.on('message', on_message)
     script.load()
 
-    show_head_view_tips_info_color()
+    #show_head_view_tips_info_color()
     script.exports.init(LayoutView.mjson)
 
     # Whether need to set pre-breakpoint

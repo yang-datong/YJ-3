@@ -229,7 +229,7 @@ class Interaction:
             self.script.exports.watch_memory(
                 targetLibName, str(length), str(offset))
 
-    def toAddress(self, string):
+    def toAddress(self, string,isprint = True):
         RE_HEX_EXPRESS = '0x[0-9A-Fa-f]{1,16}$'
         RE_DEC_EXPRESS = '\d{1,16}$'
         if (re.match(RE_HEX_EXPRESS, string)):
@@ -237,7 +237,8 @@ class Interaction:
         elif (re.match(RE_DEC_EXPRESS, string)):
             int_type = 10
         else:
-            print("Format error as -> 0-0xfxxxx")
+            if isprint:
+               print("Format error as -> 0-0xfxxxx")
             return -1
         return int(string, int_type)
 
@@ -305,15 +306,15 @@ class Interaction:
     def show_watchs(self):
         watch_info = self.script.exports.get_watchs()
         if not watch_info is None:
-            print(GREEN("watch info -> " + watch_info))
+            print(GREEN("watch info -> " + str(watch_info)))
 
     def show_function(self, argv):
         if len(argv) < 3:
             print("Need [targetLibName]")
             return
         libName = argv[2]
-        self.script.exports.get_export_func(libName)
         self.script.exports.get_import_func(libName)
+        self.script.exports.get_export_func(libName)
 
     def show_debug_symbol(self, argv):
         if len(argv) < 3:
@@ -321,7 +322,7 @@ class Interaction:
             return
         name = None
         address = None
-        if self.toAddress(argv[2]) == -1:
+        if self.toAddress(argv[2],False) == -1:
             name = argv[2]
         else:
             address = argv[2]

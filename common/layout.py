@@ -22,8 +22,8 @@ class LayoutView:
 
     def check_is_need_clear_view(self):
         if LayoutView.clear_tag in self.payload:
-            print("\n"*100)
-            print(GREEN(LayoutView.wecome))
+            print("\n"*10)
+            #print(GREEN(LayoutView.wecome))
             show_head_view_tips_info_color()
             return True
         else:
@@ -221,7 +221,7 @@ def get_config_info():
     |__/|__/___/\___/\____/_/|_/_/  /_/___/     /_/\___/
     """
     LayoutView.banner = """
-¦   ¦   ¦   ¦   ¦   ¦   ¦__..--.._
+    ¦   ¦   ¦   ¦   ¦   ¦__..--.._
     ¦ .....              .--~  .....  `.
     .":    "`-..  .    .' ..-'"    :". `
     ` `._ ` _.'`"(     `-"'`._ ' _.' '
@@ -229,7 +229,7 @@ def get_config_info():
     ¦   ¦   ¦   ¦ .'
     ¦   ¦   ¦   ¦/
     ¦   ¦   ¦   (
-    ¦   ¦   ¦   ¦^---'
+    ¦   ¦   ¦   ¦^---'    --> YJ-3 <--
     """
     print(RED(LayoutView.banner))
 

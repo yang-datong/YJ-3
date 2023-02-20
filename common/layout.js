@@ -152,6 +152,7 @@ function show_code_view() {
 
 // 显示所有布局视图
 function show_view(context) {
+	send(CLEAR_TAG);
 	init_segment_address(context);
 	show_registers(context);
 	show_telescope_view(context.sp, VIEW_STACK); // 栈空间视图

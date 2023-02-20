@@ -1,5 +1,4 @@
 #!/usr/local/bin/python3.9
-# -*- coding: UTF-8 -*-
 from common.init_palace import main
 import argparse
 
