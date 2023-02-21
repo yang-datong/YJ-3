@@ -6,8 +6,6 @@ import readline
 RE_EVAL_EXPRESS = '(0x)?[0-9A-Fa-f]{1,16}(-|\+)(0x)?[0-9A-Fa-f]{1,16}$'
 RE_FUNCTION_EXPRESS = '(\*)?[a-zA-Z]+'
 
-LOGO = RED("\nYJ ➤ ")
-
 
 class Interaction:
 
@@ -27,7 +25,7 @@ class Interaction:
 
     def command(self):
         while True:
-            cmd = input(LOGO)
+            cmd = input(RED("\nYJ ➤ "))
             if (cmd == "" or cmd.isspace()):
                 continue
             elif (cmd == "help" or cmd == "h"):
@@ -178,7 +176,6 @@ class Interaction:
 #                targetLibName = it["name"]
 #        return targetLibName
 
-
     def set_breakpoint(self, argv):
         if len(argv) == 1:
             print(argv[0] + " format error, try exec \"help\"")
@@ -244,7 +241,7 @@ class Interaction:
             self.script.exports.watch_memory(
                 targetLibName, str(length), str(offset))
 
-    def toAddress(self, string,isprint = True):
+    def toAddress(self, string, isprint=True):
         RE_HEX_EXPRESS = '0x[0-9A-Fa-f]{1,16}$'
         RE_DEC_EXPRESS = '\d{1,16}$'
         if (re.match(RE_HEX_EXPRESS, string)):
@@ -253,7 +250,7 @@ class Interaction:
             int_type = 10
         else:
             if isprint:
-               print("Format error as -> 0-0xfxxxx")
+                print("Format error as -> 0-0xfxxxx")
             return -1
         return int(string, int_type)
 
@@ -337,7 +334,7 @@ class Interaction:
             return
         name = None
         address = None
-        if self.toAddress(argv[2],False) == -1:
+        if self.toAddress(argv[2], False) == -1:
             name = argv[2]
         else:
             address = argv[2]
