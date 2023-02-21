@@ -19,6 +19,13 @@ class Interaction:
         # self.cache_all_so_json_fmt = None
 
     def start(self):
+        try:
+            self.command()
+        except KeyboardInterrupt:
+            print(GREEN(" Use \"q|quit\" exit YJ"))
+            self.start()
+
+    def command(self):
         while True:
             cmd = input(LOGO)
             if (cmd == "" or cmd.isspace()):
@@ -83,6 +90,8 @@ class Interaction:
                 self.into_expr(argv)
             elif (re.match("!.*", cmd)):
                 self.exec_python(cmd)
+            elif (re.match("%.*", cmd)):
+                self.exec_shell(cmd)
             else:
                 print("Option does not exist : \"%s\".  Try \"help\"" % cmd)
 
@@ -90,6 +99,12 @@ class Interaction:
     def exec_python(self, cmd):
         try:
             exec(cmd.replace("!", ""))
+        except Exception as e:
+            print(e)
+
+    def exec_shell(self, cmd):
+        try:
+            os.system(cmd.replace("%", ""))
         except Exception as e:
             print(e)
 
@@ -417,6 +432,7 @@ MENU = '''
         ls                                      Display current list
         pwd                                     Display current path
         ![python]                               Exec python code
+        %[shell]                                Exec shell code
 
 -------------------------------- YJ ----------------------------------
         r|run                                   Continue spawn model attach
