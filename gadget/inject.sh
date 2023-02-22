@@ -138,7 +138,7 @@ while getopts ":hvc" opt;do
   case $opt in
 	h|help)			usage; exit 0   ;;
 	v|version)	echo "$0 -- Version $__ScriptVersion"; exit 0   ;;
-	c|clean)		rm $(ls | grep -v "explore.js\|inject.sh"); exit ;;
+	c|clean)		mv $(ls | grep -v "explore.js\|inject.sh") /tmp/ ; exit ;;
 	* )					echo -e "\n  Option does not exist : $OPTARG\n"
 							usage; exit 1   ;;
   esac

@@ -7,9 +7,6 @@ UTILITY_SCRIPT_FILE = "common/utility.js"
 
 # -------------------------- Main --------------------------
 
-# Initialization style theme
-layout = LayoutView()
-
 
 def on_message(message, data):
     if message['type'] == 'send':
@@ -64,7 +61,10 @@ def main(args):
     script.on('message', on_message)
     script.load()
 
-    #show_head_view_tips_info_color()
+    # Initialization style theme
+    layout = LayoutView()
+
+    # show_head_view_tips_info_color()
     script.exports.init(LayoutView.mjson)
 
     # Whether need to set pre-breakpoint
@@ -74,7 +74,7 @@ def main(args):
 
     # Into Interaction Model
     it = Interaction(device, script, is_spawn_model, app)
-    while(1):
+    while (True):
         try:
             it.cmdloop()
         except KeyboardInterrupt:
