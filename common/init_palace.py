@@ -74,4 +74,8 @@ def main(args):
 
     # Into Interaction Model
     it = Interaction(device, script, is_spawn_model, app)
-    it.start()
+    while(1):
+        try:
+            it.cmdloop()
+        except KeyboardInterrupt:
+            print(GREEN(" Use \"q|quit\" exit YJ"))

@@ -65,7 +65,9 @@ rpc.exports.getBreakpoints = () => globalBreakpoint + ' ' + globalLibName;
 rpc.exports.getWatchs = () => globalWatchLibName + globalWatchLibRange;
 
 rpc.exports.stopAutoShowView = () => {
-	isAutoShowView = false;
+	//isAutoShowView = false;
+	isAutoShowView = !isAutoShowView;
+	return isAutoShowView;
 };
 
 rpc.exports.readPointer = address => {

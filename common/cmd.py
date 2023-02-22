@@ -2,12 +2,16 @@
 from common.layout import *
 import sys
 import readline
+from cmd import Cmd
 # ------------------------ Interaction Model ------------------------
 RE_EVAL_EXPRESS = '(0x)?[0-9A-Fa-f]{1,16}(-|\+)(0x)?[0-9A-Fa-f]{1,16}$'
 RE_FUNCTION_EXPRESS = '(\*)?[a-zA-Z]+'
+YJ_HISTORY_FILE = ".YJ_history"
 
 
-class Interaction:
+class Interaction(Cmd):
+
+    prompt = RED("\nYJ ➤ ")
 
     def __init__(self, device, script, spawn_model, pid):
         self.device = device
@@ -15,83 +19,163 @@ class Interaction:
         self.spawn_model = spawn_model
         self.pid = pid
         # self.cache_all_so_json_fmt = None
+        Cmd.__init__(self)
+        self.read_history()
 
-    def start(self):
-        try:
-            self.command()
-        except KeyboardInterrupt:
-            print(GREEN(" Use \"q|quit\" exit YJ"))
-            self.start()
+    def default(self, cmd):
+        print("Option does not exist : \"%s\".  Try \"help\"" % cmd)
 
-    def command(self):
-        while True:
-            cmd = input(RED("\nYJ ➤ "))
-            if (cmd == "" or cmd.isspace()):
-                continue
-            elif (cmd == "help" or cmd == "h"):
-                print(MENU)
-                continue
-            elif (cmd == "version" or cmd == "v"):
-                print("Current version -> " + GREEN("YJ-3"))
-                continue
-            argv = cmd.split()
-            cmd = argv[0]
+    def emptyline(self):
+        print("", end='')
+
+    def do_EOF(self, cmd):
+        self.safe_exit()
+
+    def do_help(self, cmd):
+        print(MENU)
+    do_h = do_help
+
+    def do_version(self, cmd):
+        print("Current version -> " + GREEN("YJ-3"))
+    do_v = do_version
+
 # -------------------- Shell command --------------------
-            if (cmd == "quit" or cmd == "q"):
-                sys.exit(0)
-            elif (cmd == "clear" or cmd == "cl"):
-                os.system("clear")
-            elif (cmd == "ls"):
-                os.system("ls --color")
-            elif (cmd == "pwd"):
-                os.system("pwd")
+    def do_quit(self, cmd):
+        self.safe_exit()
+    do_q = do_quit
+
+    def do_clear(self, cmd):
+        os.system("clear")
+    do_cl = do_clear
+
+    def do_ls(self, cmd):
+        os.system("ls --color")
+
+    def do_pwd(self, cmd):
+        os.system("pwd")
 # -------------------- Frida command --------------------
-            elif (cmd == "c" or cmd == "cc"):
-                self.script.exports.c(argv[1])
-            elif (cmd == "run" or cmd == "r"):
-                self.resume_process()
-            elif (cmd == "main" or cmd == "m"):
-                self.show_all_view()
-            elif (cmd == "kill" or cmd == "k"):
-                self.stop_auto_show_view()
-            elif (cmd == "trace" or cmd == "t"):
-                self.trace(argv)
-            elif (cmd == "print" or cmd == "p"):
-                self.print_address(argv, 10)
-            elif (cmd == "hex" or cmd == "x"):
-                self.print_address(argv, 16)
-            elif (cmd == "string" or cmd == "s"):
-                self.read_String(argv)
-            elif (cmd == "hexdump" or cmd == "hd"):
-                self.hexdump(argv)
-            elif (cmd == "telescope" or cmd == "tele"):
-                self.telescope(argv)
-            elif (cmd == "lib" or cmd == "so"):
-                self.libc_base_address()
-            elif (cmd == "find" or cmd == "f"):
-                self.find_api_by_func(argv)
-            elif (cmd == "breakpoints" or cmd == "b"):
-                self.set_breakpoint(argv)
-            elif (cmd == "info" or cmd == "i"):
-                self.display_info_list_type(argv)
-            elif (cmd == "delete" or cmd == "d"):
-                self.delete_breakpoint(argv)
-            elif (cmd == "watch" or cmd == "w"):
-                self.watch_memory(argv)
-            elif (cmd == "unwatch" or cmd == "uw"):
-                self.un_watch_memory()
-            elif (cmd == "writefile" or cmd == "wf"):
-                self.write_file(argv)
-            elif (cmd == "hookfunction" or cmd == "hf"):
-                self.hook_function(argv)
-            elif (cmd == "expr"):
-                self.into_expr(argv)
-            elif (re.match("!.*", cmd)):
-                self.exec_python(cmd)
-            elif (re.match("%.*", cmd)):
-                self.exec_shell(cmd)
-            else:
-                print("Option does not exist : \"%s\".  Try \"help\"" % cmd)
+
+#    def do_c(self, cmd):
+#        self.script.exports.c(self.lastcmd.split()[1])
+#    do_cc = do_c
+
+    def do_run(self, cmd):
+        self.resume_process()
+    do_r = do_run
+
+    def do_main(self, cmd):
+        self.show_all_view()
+    do_m = do_main
+
+    def do_kill(self, cmd):
+        self.stop_auto_show_view()
+    do_k = do_kill
+
+    def do_trace(self, cmd):
+        self.trace(self.lastcmd.split())
+    do_t = do_trace
+
+    def do_print(self, cmd):
+        self.print_address(self.lastcmd.split(), 10)
+    do_p = do_print
+
+    def do_hex(self, cmd):
+        self.print_address(self.lastcmd.split(), 16)
+    do_x = do_hex
+
+    def do_string(self, cmd):
+        self.read_String(self.lastcmd.split())
+    do_s = do_string
+
+    def do_hexdump(self, cmd):
+        self.hexdump(self.lastcmd.split())
+    do_hd = do_hexdump
+
+    def do_telescope(self, cmd):
+        self.telescope(self.lastcmd.split())
+    do_tele = do_telescope
+
+    def do_lib(self, cmd):
+        self.libc_base_address()
+    do_so = do_lib
+
+    def do_find(self, cmd):
+        self.find_api_by_func(self.lastcmd.split())
+    do_f = do_find
+
+    def do_breakpoints(self, cmd):
+        self.set_breakpoint(self.lastcmd.split())
+    do_b = do_breakpoints
+
+    def do_info(self, cmd):
+        self.display_info_list_type(self.lastcmd.split())
+    do_i = do_info
+
+    def do_delete(self, cmd):
+        self.delete_breakpoint(self.lastcmd.split())
+    do_d = do_delete
+
+    def do_watch(self, cmd):
+        self.watch_memory(self.lastcmd.split())
+    do_w = do_watch
+
+    def do_unwatch(self, cmd):
+        self.un_watch_memory()
+    do_uw = do_unwatch
+
+    def do_writefile(self, cmd):
+        self.write_file(self.lastcmd.split())
+    do_wf = do_writefile
+
+    def do_hookfunction(self, cmd):
+        self.hook_function(self.lastcmd.split())
+    do_hf = do_hookfunction
+
+    def do_expr(self, cmd):
+        self.into_expr(self.lastcmd.split())
+
+#    def do_history(self, cmd):
+#        with open(YJ_HISTORY_FILE, 'r') as f:
+#            content = f.read()
+#        print(content)
+
+    # ----- record and playback -----
+#    def do_record(self, arg):
+#        self.file = open(YJ_HISTORY_FILE, 'w')
+#
+#    def do_playback(self, arg):
+#        self.close()
+#        with open(YJ_HISTORY_FILE) as f:
+#            self.cmdqueue.extend(f.read().splitlines())
+
+#    def do_shell(self,cmd):
+#        print(cmd)
+
+    def precmd(self, cmd):
+        if (re.match("!.*", cmd)):
+            self.exec_python(cmd)
+            return ""
+        elif (re.match("%.*", cmd)):
+            self.exec_shell(cmd)
+            return ""
+        return cmd
+
+    def safe_exit(self):
+        self.write_history()
+        print("See you ~")
+        sys.exit(0)
+
+    def read_history(self):
+        try:
+            readline.read_history_file(YJ_HISTORY_FILE)
+        except:
+            pass
+
+    def write_history(self):
+        try:
+            readline.write_history_file(YJ_HISTORY_FILE)
+        except Exception as e:
+            print(e)
 
 # -------------------- Call JavaScript function --------------------
     def exec_python(self, cmd):
@@ -388,8 +472,10 @@ class Interaction:
         self.script.exports.show_all_view()
 
     def stop_auto_show_view(self):
-        self.script.exports.stop_auto_show_view()
-        print(GREEN("Kill Success"))
+        if self.script.exports.stop_auto_show_view():
+            print(GREEN("Open Success"))
+        else:
+            print(GREEN("Kill Success"))
 
     def libc_base_address(self):
         address = self.script.exports.libc_base_address()
