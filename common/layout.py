@@ -231,7 +231,7 @@ def get_config_info():
     ¦   ¦   ¦   (
     ¦   ¦   ¦   ¦^---'    --> YJ-3 <--
     """
-    print(RED(LayoutView.banner))
+    #print(RED(LayoutView.banner))
 
 # 获取目标源文件，进行反汇编代码获取
 

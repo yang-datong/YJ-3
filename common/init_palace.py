@@ -2,12 +2,12 @@
 from common.cmd import *
 import frida
 
+# Initialization style theme
+layout = LayoutView()
 LAYOUT_SCRIPT_FILE = "common/layout.js"
 UTILITY_SCRIPT_FILE = "common/utility.js"
 
 # -------------------------- Main --------------------------
-
-
 def on_message(message, data):
     if message['type'] == 'send':
         layout.check_is_view_tag(message)
@@ -61,8 +61,7 @@ def main(args):
     script.on('message', on_message)
     script.load()
 
-    # Initialization style theme
-    layout = LayoutView()
+    print(RED(LayoutView.banner))
 
     # show_head_view_tips_info_color()
     script.exports.init(LayoutView.mjson)
