@@ -1,8 +1,9 @@
 #!/usr/local/bin/python3.9
 from common.init_palace import main
 import argparse
+import os
 
-MAIN_SCRIPT_FILE = "model/main.js"
+MAIN_SCRIPT_FILE = os.path.dirname(os.path.abspath(__file__)) + "/model/main.js"
 
 parser = argparse.ArgumentParser()
 parser.add_argument('app', help='target application')

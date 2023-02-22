@@ -4,8 +4,11 @@ import frida
 
 # Initialization style theme
 layout = LayoutView()
-LAYOUT_SCRIPT_FILE = "common/layout.js"
-UTILITY_SCRIPT_FILE = "common/utility.js"
+#LAYOUT_SCRIPT_FILE = "common/layout.js"
+#UTILITY_SCRIPT_FILE = "common/utility.js"
+
+LAYOUT_SCRIPT_FILE = os.path.dirname(os.path.abspath(__file__)) +"/layout.js"
+UTILITY_SCRIPT_FILE =os.path.dirname(os.path.abspath(__file__)) + "/utility.js"
 
 # -------------------------- Main --------------------------
 def on_message(message, data):

@@ -5,6 +5,13 @@ import os
 import traceback
 import re
 
+# JSON_CONFIG_FILE = 'style/config.json'
+# GET_TARGET_BINARY_FILE = "common/get_target_binary.sh"
+
+JSON_CONFIG_FILE = os.path.dirname(
+    os.path.abspath(__file__)) + '/../style/config.json'
+GET_TARGET_BINARY_FILE = os.path.dirname(
+    os.path.abspath(__file__)) + "/get_target_binary.sh"
 
 class LayoutView:
     def __init__(self):
@@ -18,12 +25,12 @@ class LayoutView:
     # 显示一条分割线
     def show_line_view(self):
         print("\n"+"─"*int(self.width - LayoutView.end_line_len - int(len(LayoutView.message_tag))
-                      ) + CYAN(LayoutView.message_tag) + "─"*LayoutView.end_line_len+"\n")
+                           ) + CYAN(LayoutView.message_tag) + "─"*LayoutView.end_line_len+"\n")
 
     def check_is_need_clear_view(self):
         if LayoutView.clear_tag in self.payload:
             print("\n"*10)
-            #print(GREEN(LayoutView.wecome))
+            # print(GREEN(LayoutView.wecome))
             show_head_view_tips_info_color()
             return True
         else:
@@ -186,7 +193,7 @@ class LayoutView:
 
 # --------------------获取配置信息--------------------
 def get_config_info():
-    with open('./style/config.json', 'r') as file:
+    with open(JSON_CONFIG_FILE, 'r') as file:
         mjson = json.load(file)
     LayoutView.mjson = mjson
     LayoutView.end_line_len = mjson['end_line_len']
@@ -231,14 +238,14 @@ def get_config_info():
     ¦   ¦   ¦   (
     ¦   ¦   ¦   ¦^---'    --> YJ-3 <--
     """
-    #print(RED(LayoutView.banner))
+    # print(RED(LayoutView.banner))
 
 # 获取目标源文件，进行反汇编代码获取
 
 
 def dump_target_binary(path, lib_name, row, offset):
-    result = os.popen("./common/get_target_binary.sh " +
-                      path + " " + lib_name + " " + row + " " + offset)
+    result = os.popen(GET_TARGET_BINARY_FILE + " " + path +
+                      " " + lib_name + " " + row + " " + offset)
     return result.readlines()
 
 

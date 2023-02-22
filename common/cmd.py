@@ -6,7 +6,9 @@ from cmd import Cmd
 # ------------------------ Interaction Model ------------------------
 RE_EVAL_EXPRESS = '(0x)?[0-9A-Fa-f]{1,16}(-|\+)(0x)?[0-9A-Fa-f]{1,16}$'
 RE_FUNCTION_EXPRESS = '(\*)?[a-zA-Z]+'
-YJ_HISTORY_FILE = ".YJ_history"
+
+#YJ_HISTORY_FILE = ".YJ_history"
+YJ_HISTORY_FILE = os.path.dirname(os.path.abspath(__file__)) + "/../.YJ_history"
 
 
 class Interaction(Cmd):
