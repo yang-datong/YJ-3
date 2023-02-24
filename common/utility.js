@@ -562,7 +562,6 @@ function writeFile(content, fileName,opt) {
 		if (opt != undefined || opt != null) {
 			_opt = opt;
 		}
-		console.log(_opt);
 		file = new File(fileName, _opt);
 		file.write(content);
 		file.flush();

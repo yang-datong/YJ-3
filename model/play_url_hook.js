@@ -1,10 +1,10 @@
 // -------------------------define-------------------------------
 // -------------------------mian-------------------------------
 let fileHead;
-let index = 0;
 Java.perform(() => {
 	const cls = Java.use('com.ss.ttvideoengine.TTVideoEngineLegacy');
 	cls._logFirstFrame.overload().implementation = function () {
+	let index = 0;
 		// Send("_logFirstFrame")
 		const media_cls = Java.use('com.ss.ttvideoengine.MediaPlayerWrapper');
 		// Const ret = media_cls.getDataSource()
@@ -27,7 +27,7 @@ Java.perform(() => {
 				console.log(returnValue);
 			}
 
-			writeFile(returnValue, '/sdcard/url/' + fileHead + 'url' + index++ + '.txt');
+			writeFile(returnValue, '/sdcard/Documents/' + fileHead + 'url' + index++ + '.txt');
 			return this.getIntOption(v0, v1);
 		};
 	};
