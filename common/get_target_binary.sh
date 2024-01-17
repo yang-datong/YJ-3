@@ -4,6 +4,10 @@ __ScriptVersion="1.0"
 
 YJ_dir=".YJ"
 obj="objdump"
+if [ "$(uname)" == "Linux" ];then
+	#Linux -> Installed llvm , such as(Ubuntu): apt install llvm
+	obj="llvm-objdump"
+fi
 
 target_binary_path=$1
 lib_name=$2
