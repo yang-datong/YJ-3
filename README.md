@@ -19,6 +19,9 @@ apt install llvm
 ```
 
 ## 使用
+**下列图示的环境：**
+- 目标应用：YouTube 17.35.35 (size:19.98M）
+- 手机：小米10
 
 通过`ADB`连接上已经开启了`frida-server`的`Android`手机
 
@@ -32,7 +35,6 @@ python3 exp.py [你的目标应用名称]
 看起来有点意思，这是一个简单的`内置shell`交互模式
 
 > 试用了一些`python`的`内置shell`库都感觉不够轻量
-
 
 
 `YJ`提供了一些在我用`GDB`调试时的一些常见命令，具体可以看`help`命令的输出文本,默认`YJ`启动的是`attach`模式直接附加到当前的App中:
