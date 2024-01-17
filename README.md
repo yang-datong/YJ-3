@@ -12,6 +12,11 @@
 pip3 install frida==16.0.0
 git clone https://github.com/yang-datong/YJ-3.git
 ```
+## Linux（Option)
+如果是Linux发行版那么需要安装llvm套件（因为我是在MacOS中开发的，当时没想到兼容性），主要是使用`llvm-objdump`，以Ubuntu为例：
+```bash
+apt install llvm
+```
 
 ## 使用
 
